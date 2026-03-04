@@ -1,0 +1,114 @@
+/* Nera Cosmétique - Styles globaux & design system responsive */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #FF6600;
+  --primary-dark: #E55A00;
+  --secondary-color: #FFF5F0;
+  --text-dark: #2a2a2a;
+  --text-light: #666;
+  --bg-light: #ffffff;
+  --white: #ffffff;
+  --border-color: #eee;
+  --success: #22c55e;
+  --error: #e53935;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Breakpoints (pour référence) : 576px sm, 768px md, 992px lg, 1200px xl */
+  --container-max: 1200px;
+  --spacing-page: 24px;
+  --spacing-section: 32px;
+  --touch-min: 44px;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--spacing-page);
+  width: 100%;
+}
+
+.btn {
+  padding: 12px 24px;
+  min-height: var(--touch-min);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.btn-outline {
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* Responsive global */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
+}

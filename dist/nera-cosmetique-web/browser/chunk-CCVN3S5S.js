@@ -1,0 +1,1 @@
+import{Y as e}from"./chunk-XT632AXT.js";var m=(()=>{class t{transform(r){return new Intl.NumberFormat("fr-FR",{style:"decimal",minimumFractionDigits:0,maximumFractionDigits:0}).format(r)+" FCFA"}static \u0275fac=function(i){return new(i||t)};static \u0275pipe=e({name:"price",type:t,pure:!0,standalone:!0})}return t})();export{m as a};
