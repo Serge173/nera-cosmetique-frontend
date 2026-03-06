@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npx ng build --configuration production",
   "outputDirectory": "dist/nera-cosmetique-web/browser",
   "rewrites": [
     {
