@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const envPath = path.join(__dirname, '../src/environments/environment.prod.ts');
-const apiUrl = process.env.API_URL || 'https://api.neracosmetique.ci';
+const apiUrl = process.env.API_URL || 'https://nera-cosmetique-api.onrender.com';
 // S'assurer que l'URL ne se termine pas par /
 const apiUrlClean = apiUrl.replace(/\/+$/, '');
 const fullApiUrl = apiUrlClean.includes('/api/v1') ? apiUrlClean : `${apiUrlClean}/api/v1`;
