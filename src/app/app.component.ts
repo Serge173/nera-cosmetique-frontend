@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ResolveEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { AppUpdateService } from './core/services/app-update.service';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
@@ -44,6 +45,10 @@ const isAdminUrl = (url: string) =>
 export class AppComponent {
   title = 'Nera Cosmétique';
   private router = inject(Router);
+
+  constructor() {
+    inject(AppUpdateService).start();
+  }
 
   readonly isAdmin = toSignal(
     this.router.events.pipe(
