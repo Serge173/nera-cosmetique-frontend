@@ -676,8 +676,21 @@ import { CategoryWithCount } from '../../models/product.model';
       }
 
       .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .products-grid {
+        gap: 8px;
+      }
+      .skeleton-line {
+        height: 10px;
+        margin: 8px 8px 0;
+      }
+      .skeleton-line.price {
+        margin-bottom: 10px;
       }
     }
 
@@ -689,10 +702,22 @@ import { CategoryWithCount } from '../../models/product.model';
       .shop-toolbar {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
+        margin-bottom: 16px;
       }
 
       .toolbar-actions {
         justify-content: space-between;
+        gap: 8px;
+      }
+
+      .btn-filters-mobile,
+      .sort-label {
+        flex: 1;
+      }
+
+      .sort-select {
+        width: 100%;
       }
 
       .btn-filters-mobile,
@@ -703,11 +728,6 @@ import { CategoryWithCount } from '../../models/product.model';
 
       .sort-label-text {
         display: none;
-      }
-
-      .products-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
       }
 
       .pagination {

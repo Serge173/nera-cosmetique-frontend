@@ -109,6 +109,25 @@ import { Subscription } from 'rxjs';
             </div>
           </div>
         </div>
+        <form class="mobile-search" role="search" (submit)="onSearch($event)">
+          <input
+            type="search"
+            [(ngModel)]="searchQuery"
+            name="mobileSearch"
+            placeholder="Rechercher un produit…"
+            aria-label="Rechercher un produit"
+            enterkeyhint="search"
+            autocomplete="off"
+          />
+          @if (searchQuery) {
+            <button type="button" class="mobile-search-clear" (click)="searchQuery = ''" aria-label="Effacer la recherche">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          }
+          <button type="submit" class="mobile-search-btn" aria-label="Lancer la recherche">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          </button>
+        </form>
       </div>
 
       @if (menuOpen) {
@@ -128,17 +147,6 @@ import { Subscription } from 'rxjs';
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-
-        <form class="drawer-search" (submit)="onSearch($event)">
-          <input
-            type="search"
-            [(ngModel)]="searchQuery"
-            name="drawerSearch"
-            placeholder="Rechercher un produit…"
-            aria-label="Rechercher un produit par nom"
-          />
-          <button type="submit" aria-label="Lancer la recherche"><i class="fa-solid fa-magnifying-glass"></i></button>
-        </form>
 
         <nav class="drawer-nav">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
@@ -473,7 +481,8 @@ import { Subscription } from 'rxjs';
     }
 
     .drawer-backdrop,
-    .mobile-drawer {
+    .mobile-drawer,
+    .mobile-search {
       display: none;
     }
 
@@ -496,6 +505,58 @@ import { Subscription } from 'rxjs';
       .console-btn {
         display: none;
       }
+      .header-content {
+        padding-bottom: 8px;
+      }
+      .mobile-search {
+        display: flex;
+        align-items: center;
+        position: relative;
+        gap: 8px;
+        padding: 0 0 12px;
+      }
+      .mobile-search input {
+        flex: 1;
+        min-width: 0;
+        height: 44px;
+        padding: 0 40px 0 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: #faf7f5;
+        font-size: 16px;
+        color: var(--text-dark);
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      }
+      .mobile-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+      .mobile-search input:focus {
+        outline: none;
+        background: #fff;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+      }
+      .mobile-search-clear {
+        position: absolute;
+        right: 58px;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--text-light);
+        cursor: pointer;
+      }
+      .mobile-search-btn {
+        flex-shrink: 0;
+        width: 48px;
+        height: 44px;
+        border: none;
+        border-radius: 12px;
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .mobile-search-btn:active { filter: brightness(0.95); }
       .cart-link {
         position: relative;
         width: 44px;
@@ -580,36 +641,10 @@ import { Subscription } from 'rxjs';
         color: #fff;
         transform: rotate(90deg);
       }
-      .drawer-search {
-        display: flex;
-        gap: 8px;
-        padding: 16px;
-      }
-      .drawer-search input {
-        flex: 1;
-        min-width: 0;
-        padding: 10px 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        font-size: 0.9375rem;
-      }
-      .drawer-search input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.2);
-      }
-      .drawer-search button {
-        width: 44px;
-        border: none;
-        border-radius: 10px;
-        background: var(--primary-color);
-        color: #fff;
-        cursor: pointer;
-      }
       .drawer-nav {
         display: flex;
         flex-direction: column;
-        padding: 4px 12px 24px;
+        padding: 12px 12px 24px;
       }
       .drawer-nav a,
       .drawer-logout {

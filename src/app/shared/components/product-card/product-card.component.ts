@@ -38,15 +38,23 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
           }
         </div>
         @if (product.stockQuantity === 0) {
-          <span class="stock-badge out-of-stock">Rupture de stock</span>
+          <span class="stock-badge out-of-stock"><span class="stock-label">Rupture de stock</span><span class="stock-short">Rupture</span></span>
         } @else {
-          <span class="stock-badge in-stock">En stock</span>
+          <span class="stock-badge in-stock"><span class="stock-label">En stock</span><span class="stock-short">En stock</span></span>
         }
       </div>
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      min-width: 0;
+      container-type: inline-size;
+    }
     .product-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       background: white;
       border-radius: 8px;
       overflow: hidden;
@@ -106,21 +114,35 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
     .fav-btn.active { color: #ff6600; }
     .fav-btn:focus-visible { outline: 2px solid #ff6600; outline-offset: 2px; }
     .product-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex: 1;
       padding: 16px;
     }
     .product-info h3 {
       font-size: 0.9375rem;
+      line-height: 1.3;
+      min-height: 2.6em;
       margin-bottom: 8px;
       color: var(--text-dark);
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .brand {
       font-size: 12px;
       color: var(--text-light);
       margin-bottom: 8px;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .price {
+      margin-top: auto;
       margin-bottom: 8px;
     }
     .old-price {
@@ -147,6 +169,36 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
     .stock-badge.out-of-stock {
       background: #ccc;
       color: #666;
+    }
+    .stock-short { display: none; }
+
+    @container (max-width: 200px) {
+      .product-info { padding: 10px; }
+      .product-info h3 { font-size: 0.82rem; margin-bottom: 4px; }
+      .brand { font-size: 11px; margin-bottom: 4px; }
+      .price { display: flex; flex-direction: column; margin-bottom: 6px; }
+      .old-price { font-size: 11px; margin-right: 0; }
+      .current-price { font-size: 0.92rem; }
+      .fav-btn { width: 30px; height: 30px; top: 6px; left: 6px; font-size: 0.8rem; }
+      .promo-badge { top: 6px; right: 6px; padding: 2px 6px; font-size: 11px; }
+    }
+
+    @container (max-width: 140px) {
+      .product-info { padding: 7px 7px 8px; }
+      .product-info h3 { font-size: 0.72rem; line-height: 1.25; min-height: 2.5em; }
+      .brand { font-size: 10px; margin-bottom: 3px; }
+      .old-price { font-size: 10px; }
+      .current-price { font-size: 0.78rem; font-weight: 700; }
+      .price { margin-bottom: 4px; }
+      .stock-badge { padding: 0; background: none; font-size: 10px; display: inline-flex; align-items: center; gap: 4px; }
+      .stock-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+      .stock-badge.in-stock { background: none; color: var(--success); }
+      .stock-badge.out-of-stock { background: none; color: #999; }
+      .stock-label { display: none; }
+      .stock-short { display: inline; }
+      .fav-btn { width: 26px; height: 26px; top: 5px; left: 5px; font-size: 0.72rem; }
+      .promo-badge { top: 5px; right: 5px; padding: 1px 5px; font-size: 10px; }
+      .product-card:hover { transform: none; }
     }
   `]
 })

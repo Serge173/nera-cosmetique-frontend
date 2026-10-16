@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -25,10 +25,21 @@ interface SlideItem {
       <aside class="home-sidebar" aria-label="Catégories">
         <div class="sidebar-inner">
           <h2 class="sidebar-title">Catégories</h2>
-          <nav class="sidebar-nav">
-            <a routerLink="/boutique" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="sidebar-link">Toutes les catégories</a>
+          <button
+            type="button"
+            class="cat-toggle"
+            (click)="toggleCategories($event)"
+            [attr.aria-expanded]="categoriesOpen"
+            aria-controls="home-categories">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            <span>Catégories</span>
+            <small>{{ categories.length }}</small>
+            <i class="fa-solid fa-chevron-down cat-caret" [class.up]="categoriesOpen" aria-hidden="true"></i>
+          </button>
+          <nav id="home-categories" class="sidebar-nav" [class.open]="categoriesOpen">
+            <a routerLink="/boutique" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="sidebar-link" (click)="categoriesOpen = false">Toutes les catégories</a>
             @for (cat of categories; track cat.id) {
-              <a [routerLink]="['/boutique', cat.slug]" routerLinkActive="active" class="sidebar-link">{{ cat.name }}</a>
+              <a [routerLink]="['/boutique', cat.slug]" routerLinkActive="active" class="sidebar-link" (click)="categoriesOpen = false">{{ cat.name }}</a>
             }
           </nav>
         </div>
@@ -167,6 +178,7 @@ interface SlideItem {
       background: var(--secondary-color);
       color: var(--primary-color);
     }
+    .cat-toggle { display: none; }
     .home-main {
       flex: 1;
       min-width: 0;
@@ -321,22 +333,96 @@ interface SlideItem {
         flex: none;
         width: 100%;
         max-height: none;
-        position: static;
+        position: relative;
+        top: auto;
+        z-index: 20;
+        overflow: visible;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+        background: #fff;
       }
       .sidebar-inner {
-        padding: 16px 20px;
+        padding: 10px 16px;
       }
+      .sidebar-title {
+        display: none;
+      }
+      .cat-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: #faf7f5;
+        color: var(--text-dark);
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .cat-toggle[aria-expanded='true'] {
+        border-color: var(--primary-color);
+        background: #fff;
+      }
+      .cat-toggle > i:first-child { color: var(--primary-color); }
+      .cat-toggle small {
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 11px;
+        background: var(--secondary-color);
+        color: var(--primary-color);
+        font-size: 0.72rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cat-caret {
+        margin-left: auto;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        transition: transform 0.2s;
+      }
+      .cat-caret.up { transform: rotate(180deg); }
       .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
+        display: none;
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: calc(100% - 4px);
+        max-height: min(60vh, 360px);
+        overflow-y: auto;
+        padding: 6px;
+        gap: 2px;
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+      }
+      .sidebar-nav.open {
+        display: flex;
+        animation: catDrop 0.16s ease-out;
       }
       .sidebar-link {
-        padding: 8px 12px;
+        padding: 11px 12px;
         font-size: 0.875rem;
+        text-transform: none;
       }
+      .products-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .products-grid > :nth-child(3n + 4):last-child {
+        display: none;
+      }
+    }
+    @keyframes catDrop {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: none; }
     }
     @media (max-width: 768px) {
       .hero-slider, .slide {
@@ -361,8 +447,8 @@ interface SlideItem {
         font-size: 1.375rem;
       }
       .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
       }
       .newsletter {
         padding: 40px 16px;
@@ -383,8 +469,8 @@ interface SlideItem {
         font-size: 1.5rem;
       }
       .products-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
       }
       .featured-products, .new-products {
         padding: 32px 0;
@@ -394,6 +480,7 @@ interface SlideItem {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   categories: Category[] = [];
+  categoriesOpen = false;
   featuredProducts: Product[] = [];
   newProducts: Product[] = [];
   newsletterEmail = '';
@@ -446,6 +533,23 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopAutoPlay();
+  }
+
+  toggleCategories(event: Event) {
+    event.stopPropagation();
+    this.categoriesOpen = !this.categoriesOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (this.categoriesOpen && !(event.target as HTMLElement).closest('.home-sidebar')) {
+      this.categoriesOpen = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.categoriesOpen = false;
   }
 
   loadSlides() {

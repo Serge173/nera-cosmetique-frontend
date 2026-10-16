@@ -45,6 +45,10 @@
   --header-height: 68px;
 }
 
+@media (max-width: 992px) {
+  :root { --header-height: 122px; }
+}
+
 html {
   scroll-padding-top: var(--header-height);
 }
