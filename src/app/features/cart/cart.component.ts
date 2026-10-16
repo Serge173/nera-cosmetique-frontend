@@ -52,7 +52,12 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
                 <input type="text" [(ngModel)]="couponCode" name="couponCode" placeholder="Code promo" />
                 <button (click)="applyCoupon()" class="btn btn-secondary">Appliquer</button>
                 @if (couponMessage) {
-                  <p class="coupon-message" [class.success]="couponSuccess">{{ couponMessage }}</p>
+                  <p class="coupon-message" [class.success]="couponSuccess">
+                    {{ couponMessage }}
+                    @if (couponSuccess) {
+                      <button type="button" class="coupon-remove" (click)="removeCoupon()">Retirer</button>
+                    }
+                  </p>
                 }
               </div>
 
@@ -168,6 +173,16 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
     .coupon-message.success {
       color: var(--success-color, green);
     }
+    .coupon-remove {
+      margin-left: 8px;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--text-light);
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
     .summary {
       border-top: 1px solid var(--border-color);
       border-bottom: 1px solid var(--border-color);
@@ -264,6 +279,28 @@ export class CartComponent implements OnInit {
     this.cartService.getCart().subscribe(cart => {
       this.cart = cart;
     });
+    const saved = this.cartService.getCouponCode();
+    if (saved && this.cart.items.length) {
+      this.couponCode = saved;
+      this.cartService.applyCoupon(saved).subscribe({
+        next: (res) => {
+          this.couponSuccess = res.success;
+          this.couponMessage = res.success ? res.message : '';
+          if (!res.success) {
+            this.couponCode = '';
+            this.cartService.clearCoupon();
+          }
+        },
+        error: () => {},
+      });
+    }
+  }
+
+  removeCoupon() {
+    this.cartService.clearCoupon();
+    this.couponCode = '';
+    this.couponMessage = '';
+    this.couponSuccess = false;
   }
 
   updateQuantity(item: CartItem, quantity: number) {

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { FavoritesService } from '../../../core/services/favorites.service';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -56,6 +57,13 @@ import { ToastService } from '../../../core/services/toast.service';
                 </button>
                 <button (click)="buyNow()" class="btn btn-outline" [disabled]="product.stockQuantity === 0">
                   Acheter maintenant
+                </button>
+                <button type="button" class="fav-toggle" [class.active]="favorites.isFavorite(product.id)"
+                  (click)="favorites.toggle(product.id)"
+                  [attr.aria-pressed]="favorites.isFavorite(product.id)"
+                  [attr.aria-label]="favorites.isFavorite(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+                  [title]="favorites.isFavorite(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'">
+                  <i class="fa-heart" [class.fa-solid]="favorites.isFavorite(product.id)" [class.fa-regular]="!favorites.isFavorite(product.id)"></i>
                 </button>
               </div>
 
@@ -164,6 +172,22 @@ import { ToastService } from '../../../core/services/toast.service';
     .actions .btn {
       min-width: 140px;
     }
+    .fav-toggle {
+      width: 48px;
+      min-height: 44px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: white;
+      color: #7a716b;
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .fav-toggle:hover, .fav-toggle.active {
+      color: #ff6600;
+      border-color: #ffc499;
+      background: #fff7f0;
+    }
     .tabs {
       display: flex;
       gap: 8px;
@@ -210,6 +234,9 @@ import { ToastService } from '../../../core/services/toast.service';
       .actions .btn {
         width: 100%;
       }
+      .fav-toggle {
+        width: 100%;
+      }
       .image-thumbnails img {
         width: 60px;
         height: 60px;
@@ -218,6 +245,7 @@ import { ToastService } from '../../../core/services/toast.service';
   `]
 })
 export class ProductDetailComponent implements OnInit {
+  readonly favorites = inject(FavoritesService);
   product: Product | null = null;
   mainImage = '';
   quantity = 1;

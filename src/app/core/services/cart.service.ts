@@ -5,6 +5,8 @@ import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
 import { Product } from '../../models/product.model';
 
+const COUPON_KEY = 'couponCode';
+
 export interface CartItem {
   id?: number;
   productId: number;
@@ -112,10 +114,12 @@ export class CartService {
   }
 
   applyCoupon(code: string): Observable<{ success: boolean; message: string; discount: number }> {
+    const normalized = code.trim().toUpperCase().substring(0, 40);
     const orderAmount = this.getCartValue().subtotal;
-    return this.api.post<{ valid: boolean; message: string; discount?: number }>('/coupons/validate', { code, orderAmount }).pipe(
+    return this.validateCoupon(normalized, orderAmount).pipe(
       tap((response) => {
         if (response.valid === true) {
+          this.storage.set(COUPON_KEY, normalized);
           const cart = this.getCartValue();
           cart.discount = response.discount ?? 0;
           this.recalculateCart(cart);
@@ -127,6 +131,23 @@ export class CartService {
         discount: response.valid ? (response.discount ?? 0) : 0,
       }))
     );
+  }
+
+  validateCoupon(code: string, orderAmount: number): Observable<{ valid: boolean; message: string; discount?: number }> {
+    return this.api.post<{ valid: boolean; message: string; discount?: number }>('/coupons/validate', { code, orderAmount });
+  }
+
+  getCouponCode(): string | null {
+    return this.storage.get<string>(COUPON_KEY) || null;
+  }
+
+  clearCoupon(): void {
+    this.storage.remove(COUPON_KEY);
+    const cart = this.getCartValue();
+    if (cart.discount) {
+      cart.discount = 0;
+      this.recalculateCart(cart);
+    }
   }
 
   getItemCount(): number {

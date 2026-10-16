@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FavoritesService } from '../../../core/services/favorites.service';
 import { Product } from '../../../models/product.model';
 import { safeProductImageUrl } from '../../utils/placeholder-image';
 
@@ -15,6 +16,13 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
         @if (product.promoPrice) {
           <span class="promo-badge">-{{ discountPercent }}%</span>
         }
+        <button type="button" class="fav-btn" [class.active]="isFavorite"
+          (click)="toggleFavorite($event)"
+          [attr.aria-pressed]="isFavorite"
+          [attr.aria-label]="isFavorite ? 'Retirer ' + product.name + ' des favoris' : 'Ajouter ' + product.name + ' aux favoris'"
+          [title]="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'">
+          <i class="fa-heart" [class.fa-solid]="isFavorite" [class.fa-regular]="!isFavorite"></i>
+        </button>
       </div>
       <div class="product-info">
         <h3>{{ product.name }}</h3>
@@ -76,6 +84,27 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
       font-size: 12px;
       font-weight: 600;
     }
+    .fav-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.92);
+      color: #7a716b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+      transition: transform 0.2s, color 0.2s;
+      z-index: 1;
+    }
+    .fav-btn:hover { transform: scale(1.1); color: #ff6600; }
+    .fav-btn.active { color: #ff6600; }
+    .fav-btn:focus-visible { outline: 2px solid #ff6600; outline-offset: 2px; }
     .product-info {
       padding: 16px;
     }
@@ -123,6 +152,17 @@ import { safeProductImageUrl } from '../../utils/placeholder-image';
 })
 export class ProductCardComponent {
   @Input() product!: Product;
+  private favorites = inject(FavoritesService);
+
+  get isFavorite(): boolean {
+    return this.favorites.isFavorite(this.product.id);
+  }
+
+  toggleFavorite(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.favorites.toggle(this.product.id);
+  }
 
   get productImage(): string {
     const url = this.product.images?.find(img => img.isPrimary)?.url || this.product.images?.[0]?.url;

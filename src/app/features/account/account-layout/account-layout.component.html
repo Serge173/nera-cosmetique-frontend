@@ -1,0 +1,137 @@
+<div class="adm-shell acc-shell">
+  <aside class="side" [class.open]="navOpen()" aria-label="Navigation de mon compte">
+    <div class="side-head">
+      <a routerLink="/" class="brand" aria-label="Nera Cosmétique — retour à la boutique">
+        <span class="brand-row">
+          <span class="brand-script">Nera</span>
+          <svg class="brand-leaf" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 3C11 3 5 8 5 15c0 1.6.4 3 1 4.2C8 13 12 9.5 17 7.5 12.5 10.5 9.3 14.6 7.6 20.4 8.9 21.4 10.4 22 12 22c6 0 9-6 8-19Z" />
+          </svg>
+        </span>
+        <span class="brand-sub">Cosmétique</span>
+      </a>
+      <button type="button" class="side-close" (click)="closeNav()" aria-label="Fermer le menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <nav class="side-nav">
+      @for (item of nav; track item.path) {
+        <a [routerLink]="item.path" class="nav-link" [class.active]="isActive(item)" [attr.aria-current]="isActive(item) ? 'page' : null">
+          <i class="{{ item.icon }}" aria-hidden="true"></i>
+          <span class="nav-label">{{ item.label }}</span>
+          @if (badgeOf(item) > 0) {
+            <span class="nav-badge">{{ badgeOf(item) > 99 ? '99+' : badgeOf(item) }}</span>
+          }
+        </a>
+      }
+      @if (isAdmin()) {
+        <a routerLink="/admin" class="nav-link nav-admin">
+          <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
+          <span class="nav-label">Administration</span>
+        </a>
+      }
+    </nav>
+
+    <a routerLink="/boutique" class="side-promo">
+      <img src="assets/images/account/account-promo.jpg" alt="" loading="lazy" />
+      <span class="promo-text">Prenez soin<br />de vous avec<br />Nera Cosmétique</span>
+      <span class="promo-btn">Découvrir la <strong>boutique</strong> <i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+
+    <div class="side-foot">
+      <p class="sf-brand">Nera Cosmétique</p>
+      <p class="sf-copy">© {{ year }}. Tous droits réservés.</p>
+      <div class="sf-social">
+        <a href="https://www.facebook.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.tiktok.com/@neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  @if (navOpen()) {
+    <div class="side-overlay" (click)="closeNav()" aria-hidden="true"></div>
+  }
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="burger" (click)="toggleNav()" aria-label="Ouvrir le menu" [attr.aria-expanded]="navOpen()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <p class="tagline"><span>Beauté naturelle</span><i></i><span>Confiance</span><i></i><span>Vous</span></p>
+
+      <form class="search-box" role="search" (ngSubmit)="submitSearch()">
+        <input
+          type="search"
+          name="q"
+          [(ngModel)]="searchTerm"
+          placeholder="Rechercher un produit, une marque..."
+          autocomplete="off"
+          aria-label="Rechercher dans la boutique"
+          maxlength="80"
+        />
+        <button type="submit" class="search-btn" aria-label="Lancer la recherche"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
+
+      <div class="top-actions">
+        <div class="menu-wrap" data-menu>
+          <button type="button" class="top-icon" (click)="toggleMenu('notif')" aria-label="Notifications" [attr.aria-expanded]="menu() === 'notif'">
+            <i class="fa-regular fa-bell"></i>
+            @if (activeOrders().length > 0) {
+              <span class="bell-count">{{ activeOrders().length }}</span>
+            }
+          </button>
+          @if (menu() === 'notif') {
+            <div class="dropdown notif-menu">
+              <p class="dd-head">Suivi de mes commandes</p>
+              @for (o of activeOrders(); track o.id) {
+                <button type="button" class="dd-item" (click)="go(['/compte/commandes', o.id])">
+                  <span class="dd-icon"><i class="fa-solid fa-box"></i></span>
+                  <span class="dd-main">
+                    <strong>Commande #{{ o.orderNumber }}</strong>
+                    <small>Mise à jour {{ formatDateTime(o.updatedAt) }}</small>
+                  </span>
+                  <span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                </button>
+              } @empty {
+                <p class="dd-empty"><i class="fa-regular fa-circle-check"></i> Aucune commande en cours</p>
+              }
+              <button type="button" class="dd-all" (click)="go('/compte/commandes')">Voir toutes mes commandes <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          }
+        </div>
+
+        <div class="menu-wrap" data-menu>
+          <button type="button" class="profile" (click)="toggleMenu('profile')" [attr.aria-expanded]="menu() === 'profile'" aria-label="Menu du compte">
+            <span class="profile-avatar">{{ userInitials() }}</span>
+            <span class="profile-name">{{ userName() }}</span>
+            <i class="fa-solid fa-chevron-down profile-caret"></i>
+          </button>
+          @if (menu() === 'profile') {
+            <div class="dropdown profile-menu">
+              <div class="pm-head">
+                <span class="profile-avatar lg">{{ userInitials() }}</span>
+                <span><strong>{{ userName() }}</strong><small>{{ user()?.email }}</small></span>
+              </div>
+              <button type="button" class="dd-item compact" (click)="go('/compte/profil')"><i class="fa-regular fa-user"></i> Mon profil</button>
+              <button type="button" class="dd-item compact" (click)="go('/compte/commandes')"><i class="fa-solid fa-bag-shopping"></i> Mes commandes</button>
+              <button type="button" class="dd-item compact" (click)="go('/panier')"><i class="fa-solid fa-cart-shopping"></i> Mon panier</button>
+              <button type="button" class="dd-item compact" (click)="go('/boutique')"><i class="fa-solid fa-store"></i> Boutique</button>
+              @if (isAdmin()) {
+                <button type="button" class="dd-item compact" (click)="go('/admin')"><i class="fa-solid fa-gauge-high"></i> Administration</button>
+              }
+              <button type="button" class="dd-item compact danger" (click)="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="acc-content" id="contenu">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

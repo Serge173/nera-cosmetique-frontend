@@ -1,12 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CartService } from '../../core/services/cart.service';
+import { Subscription } from 'rxjs';
+import { Cart, CartService } from '../../core/services/cart.service';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreateOrderDto, CheckoutFormData, Order } from '../../models/order.model';
 import { PricePipe } from '../../shared/pipes/price.pipe';
+import { formatNumber } from '../admin/shared/admin-format';
+import { Address } from '../account/shared/account.models';
+
+interface DeliveryOption { method: string; price: number; freeFrom: number | null }
+
+const DEFAULT_DELIVERY: DeliveryOption[] = [
+  { method: 'abidjan', price: 1500, freeFrom: null },
+  { method: 'interior', price: 3000, freeFrom: null },
+];
 
 @Component({
   selector: 'app-checkout',
@@ -35,42 +46,54 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
         <div class="checkout-content">
           <form (ngSubmit)="submitOrder()" class="checkout-form">
             <h2>Informations de livraison</h2>
+            @if (savedAddresses.length > 1) {
+              <div class="form-group">
+                <label for="saved-address">Mes adresses enregistrées</label>
+                <select id="saved-address" class="saved-select" [ngModel]="selectedAddressId" name="savedAddress" (ngModelChange)="useAddress($event)">
+                  @for (a of savedAddresses; track a.id) {
+                    <option [ngValue]="a.id">{{ a.label || 'Adresse' }} — {{ a.addressLine1 }}, {{ a.city }}</option>
+                  }
+                </select>
+              </div>
+            } @else if (savedAddresses.length === 1) {
+              <p class="prefill-note">Adresse « {{ savedAddresses[0].label || 'par défaut' }} » pré-remplie depuis votre compte.</p>
+            }
             <div class="form-row">
               <div class="form-group">
-                <label>Nom *</label>
-                <input type="text" [(ngModel)]="orderData.firstName" name="firstName" required />
+                <label for="co-first">Prénom *</label>
+                <input id="co-first" type="text" [(ngModel)]="orderData.firstName" name="firstName" required maxlength="100" autocomplete="given-name" />
               </div>
               <div class="form-group">
-                <label>Prénom *</label>
-                <input type="text" [(ngModel)]="orderData.lastName" name="lastName" required />
+                <label for="co-last">Nom *</label>
+                <input id="co-last" type="text" [(ngModel)]="orderData.lastName" name="lastName" required maxlength="100" autocomplete="family-name" />
               </div>
             </div>
             <div class="form-group">
-              <label>Email *</label>
-              <input type="email" [(ngModel)]="orderData.email" name="email" required />
+              <label for="co-email">Email *</label>
+              <input id="co-email" type="email" [(ngModel)]="orderData.email" name="email" required maxlength="255" autocomplete="email" />
             </div>
             <div class="form-group">
-              <label>Téléphone *</label>
-              <input type="tel" [(ngModel)]="orderData.phone" name="phone" required />
+              <label for="co-phone">Téléphone *</label>
+              <input id="co-phone" type="tel" [(ngModel)]="orderData.phone" name="phone" required maxlength="30" autocomplete="tel" inputmode="tel" />
             </div>
             <div class="form-group">
-              <label>Adresse *</label>
-              <input type="text" [(ngModel)]="orderData.addressLine1" name="addressLine1" required />
+              <label for="co-addr">Adresse *</label>
+              <input id="co-addr" type="text" [(ngModel)]="orderData.addressLine1" name="addressLine1" required maxlength="255" autocomplete="address-line1" />
             </div>
             <div class="form-group">
-              <label>Ville *</label>
-              <input type="text" [(ngModel)]="orderData.city" name="city" required />
+              <label for="co-city">Ville *</label>
+              <input id="co-city" type="text" [(ngModel)]="orderData.city" name="city" required maxlength="100" autocomplete="address-level2" />
             </div>
 
             <h2>Mode de livraison</h2>
             <div class="form-group">
               <label>
                 <input type="radio" [(ngModel)]="orderData.deliveryMethod" name="delivery" value="abidjan" />
-                Livraison à domicile en moins de 48h - 1 500 FCFA
+                Livraison à domicile en moins de 48h - {{ deliveryLabel('abidjan') }}
               </label>
               <label>
                 <input type="radio" [(ngModel)]="orderData.deliveryMethod" name="delivery" value="interior" />
-                Expédition (paiement avant expédition) - 3 000 FCFA
+                Expédition (paiement avant expédition) - {{ deliveryLabel('interior') }}
               </label>
             </div>
 
@@ -98,7 +121,10 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
               </label>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-large" [disabled]="submitting">
+            @if (formError) {
+              <p class="form-error" role="alert">{{ formError }}</p>
+            }
+            <button type="submit" class="btn btn-primary btn-large" [disabled]="submitting || !cart.items.length">
               {{ submitting ? 'Traitement...' : 'Confirmer la commande' }}
             </button>
           </form>
@@ -120,8 +146,17 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
               </div>
               <div class="summary-row">
                 <span>Livraison</span>
-                <span>{{ shippingCost | price }}</span>
+                <span>{{ orderData.deliveryMethod ? (shippingCost > 0 ? (shippingCost | price) : 'Offerte') : '—' }}</span>
               </div>
+              @if (discount > 0) {
+                <div class="summary-row discount">
+                  <span>Réduction ({{ couponCode }})</span>
+                  <span>-{{ discount | price }}</span>
+                </div>
+              }
+              @if (couponMessage) {
+                <p class="coupon-note">{{ couponMessage }}</p>
+              }
               <div class="summary-row total">
                 <span>Total</span>
                 <span>{{ total | price }}</span>
@@ -237,6 +272,37 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
       font-size: 20px;
       font-weight: 600;
     }
+    .summary-row.discount {
+      color: var(--success, #2b8a52);
+    }
+    .coupon-note {
+      margin: -4px 0 12px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .form-error {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #fdeceb;
+      color: #8c1d18;
+      font-size: 14px;
+    }
+    .prefill-note {
+      margin: 0 0 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #fff7f0;
+      color: #a84300;
+      font-size: 14px;
+    }
+    .saved-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: white;
+    }
     @media (max-width: 768px) {
       .checkout-content {
         grid-template-columns: 1fr;
@@ -276,8 +342,8 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
     }
   `]
 })
-export class CheckoutComponent implements OnInit {
-  cart = { items: [] as any[], subtotal: 0, shipping: 0, discount: 0, total: 0 };
+export class CheckoutComponent implements OnInit, OnDestroy {
+  cart: Cart = { items: [], subtotal: 0, shipping: 0, discount: 0, total: 0 };
   orderData: CheckoutFormData = {
     firstName: '',
     lastName: '',
@@ -291,40 +357,150 @@ export class CheckoutComponent implements OnInit {
   submitting = false;
   orderConfirmed = false;
   confirmedOrderNumber = '';
+  formError = '';
+
+  deliveryOptions: DeliveryOption[] = DEFAULT_DELIVERY;
+  savedAddresses: Address[] = [];
+  selectedAddressId: number | null = null;
+
+  couponCode: string | null = null;
+  discount = 0;
+  couponMessage = '';
+  private validatedFor: number | null = null;
+  private subs = new Subscription();
 
   constructor(
     private cartService: CartService,
     private api: ApiService,
+    private auth: AuthService,
     private toast: ToastService
   ) {}
 
   ngOnInit() {
-    this.cart = this.cartService.getCartValue();
-    this.cartService.getCart().subscribe(cart => {
+    this.couponCode = this.cartService.getCouponCode();
+    this.subs.add(this.cartService.getCart().subscribe(cart => {
       this.cart = cart;
-    });
+      this.revalidateCoupon();
+    }));
+    this.subs.add(this.api.get<DeliveryOption[]>('/orders/delivery-options').subscribe({
+      next: (options) => {
+        if (Array.isArray(options) && options.length) this.deliveryOptions = options;
+      },
+      error: () => {},
+    }));
+    this.prefill();
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
+  }
+
+  private option(method: string): DeliveryOption | undefined {
+    return this.deliveryOptions.find(o => o.method === method);
+  }
+
+  deliveryLabel(method: string): string {
+    const o = this.option(method);
+    if (!o) return '';
+    if (o.freeFrom != null && this.cart.subtotal >= o.freeFrom) return 'offerte';
+    const price = `${formatNumber(o.price)} FCFA`;
+    return o.freeFrom != null ? `${price} (offerte dès ${formatNumber(o.freeFrom)} FCFA)` : price;
   }
 
   get shippingCost(): number {
-    return this.orderData.deliveryMethod === 'abidjan' ? 1500 :
-           this.orderData.deliveryMethod === 'interior' ? 3000 : 0;
+    const o = this.option(this.orderData.deliveryMethod);
+    if (!o) return 0;
+    return o.freeFrom != null && this.cart.subtotal >= o.freeFrom ? 0 : o.price;
   }
 
   get total(): number {
-    return this.cart.subtotal + this.shippingCost - this.cart.discount;
+    return Math.max(0, this.cart.subtotal - this.discount) + this.shippingCost;
+  }
+
+  useAddress(id: number) {
+    const a = this.savedAddresses.find(x => x.id === id);
+    if (!a) return;
+    this.selectedAddressId = a.id;
+    this.orderData.firstName = a.firstName;
+    this.orderData.lastName = a.lastName;
+    this.orderData.phone = a.phone;
+    this.orderData.addressLine1 = [a.addressLine1, a.addressLine2].filter(Boolean).join(', ');
+    this.orderData.city = a.city;
+  }
+
+  private prefill() {
+    const user = this.auth.getCurrentUser();
+    if (!user) return;
+    this.orderData.firstName = user.firstName ?? '';
+    this.orderData.lastName = user.lastName ?? '';
+    this.orderData.email = user.email ?? '';
+    this.orderData.phone = user.phone ?? '';
+    this.subs.add(this.api.get<Address[]>('/account/addresses').subscribe({
+      next: (list) => {
+        this.savedAddresses = Array.isArray(list) ? list : [];
+        const preferred = this.savedAddresses.find(a => a.isDefault) ?? this.savedAddresses[0];
+        if (preferred && !this.orderData.addressLine1) this.useAddress(preferred.id);
+      },
+      error: () => {},
+    }));
+  }
+
+  private revalidateCoupon() {
+    if (!this.couponCode) {
+      this.discount = 0;
+      return;
+    }
+    const subtotal = this.cart.subtotal;
+    if (this.validatedFor === subtotal) return;
+    this.validatedFor = subtotal;
+    if (!this.cart.items.length) return;
+    this.cartService.validateCoupon(this.couponCode, subtotal).subscribe({
+      next: (res) => {
+        if (this.validatedFor !== subtotal) return;
+        if (res.valid) {
+          this.discount = Math.min(Number(res.discount) || 0, subtotal);
+          this.couponMessage = '';
+        } else {
+          this.discount = 0;
+          this.couponMessage = `Code ${this.couponCode} non appliqué : ${res.message}`;
+          this.couponCode = null;
+          this.cartService.clearCoupon();
+        }
+      },
+      error: () => {
+        this.discount = 0;
+        this.couponMessage = 'Le code promo n’a pas pu être vérifié ; il sera contrôlé à la validation.';
+      },
+    });
   }
 
   submitOrder() {
+    this.formError = '';
+    if (!this.cart.items.length) {
+      this.formError = 'Votre panier est vide.';
+      return;
+    }
+    const required: [keyof CheckoutFormData, string][] = [
+      ['firstName', 'le prénom'], ['lastName', 'le nom'], ['email', 'l’e-mail'],
+      ['phone', 'le téléphone'], ['addressLine1', 'l’adresse'], ['city', 'la ville'],
+    ];
+    const missing = required.filter(([key]) => !String(this.orderData[key] ?? '').trim()).map(([, label]) => label);
+    if (missing.length) {
+      this.formError = `Merci de renseigner ${missing.join(', ')}.`;
+      return;
+    }
+    if (!this.option(this.orderData.deliveryMethod)) {
+      this.formError = 'Choisissez un mode de livraison.';
+      return;
+    }
     this.submitting = true;
-    const shippingAmount = this.shippingCost;
-    const total = this.total;
     const order: CreateOrderDto = {
       ...this.orderData,
-      deliveryZoneId: this.orderData.deliveryMethod === 'abidjan' ? 1 : 2,
+      couponCode: this.couponCode ?? undefined,
       subtotal: this.cart.subtotal,
-      shippingAmount,
-      discountAmount: this.cart.discount,
-      total,
+      shippingAmount: this.shippingCost,
+      discountAmount: this.discount,
+      total: this.total,
       items: this.cart.items.map(item => ({
         productId: item.productId,
         productName: item.productName,
@@ -338,6 +514,7 @@ export class CheckoutComponent implements OnInit {
     this.api.post<Order>('/orders', order).subscribe({
       next: (created) => {
         this.submitting = false;
+        this.cartService.clearCoupon();
         this.cartService.clearCart();
         this.confirmedOrderNumber = created.orderNumber;
         this.orderConfirmed = true;
@@ -346,9 +523,17 @@ export class CheckoutComponent implements OnInit {
         );
       },
       error: (err) => {
-        console.error(err);
-        this.toast.error('Erreur lors de la création de la commande. Vérifiez vos informations.');
         this.submitting = false;
+        const message = err?.error?.message;
+        this.formError = typeof message === 'string' && message
+          ? message
+          : 'Erreur lors de la création de la commande. Vérifiez vos informations.';
+        this.toast.error(this.formError);
+        if (/code promo|bon fidélité/i.test(this.formError)) {
+          this.couponCode = null;
+          this.discount = 0;
+          this.cartService.clearCoupon();
+        }
       }
     });
   }

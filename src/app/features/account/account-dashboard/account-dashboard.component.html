@@ -1,0 +1,219 @@
+<section class="hero">
+  <div class="hero-text">
+    <h1>Bonjour {{ data()?.user?.firstName || 'et bienvenue' }} <span class="wave" aria-hidden="true">👋</span></h1>
+    <p>Voici un aperçu de votre compte et de vos dernières activités.</p>
+  </div>
+  <p class="hero-script" aria-hidden="true">
+    <span>Votre beauté,</span>
+    <span>notre priorité ! <i class="fa-solid fa-heart"></i></span>
+    <i class="fa-solid fa-heart hero-heart"></i>
+  </p>
+  <div class="hero-visual" aria-hidden="true">
+    <img src="assets/images/account/account-hero.jpg" alt="" />
+  </div>
+</section>
+
+@if (error() && !data()) {
+  <div class="adm-card adm-empty">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>Impossible de charger votre tableau de bord.</p>
+    <button type="button" class="adm-btn adm-btn-sm" (click)="retry()">Réessayer</button>
+  </div>
+} @else {
+  @let d = data();
+  <div class="grid">
+    <div class="col-main">
+      <div class="row-top">
+        <!-- Profil -->
+        <section class="adm-card card profile-card" aria-labelledby="t-profil">
+          <h2 id="t-profil" class="card-title">Mon profil</h2>
+          @if (d) {
+            <div class="pc-body">
+              <div class="pc-avatar">
+                <span>{{ initials() }}</span>
+                <a routerLink="/compte/profil" class="pc-edit" aria-label="Modifier mon profil"><i class="fa-solid fa-pen"></i></a>
+              </div>
+              <div class="pc-info">
+                <p class="pc-name">
+                  <span>{{ fullName() }}</span>
+                  <span class="adm-badge peach">{{ d.loyalty.tier.label }}</span>
+                </p>
+                <ul class="pc-list">
+                  <li><i class="fa-regular fa-envelope"></i><span>{{ d.user.email }}</span></li>
+                  <li><i class="fa-solid fa-phone"></i><span>{{ d.user.phone || 'Téléphone non renseigné' }}</span></li>
+                  <li><i class="fa-solid fa-location-dot"></i><span>{{ d.user.city ? d.user.city + ', Côte d’Ivoire' : 'Ville non renseignée' }}</span></li>
+                  <li><i class="fa-regular fa-calendar"></i><span>Membre depuis {{ memberSince() }}</span></li>
+                </ul>
+                <a routerLink="/compte/profil" class="adm-btn adm-btn-ghost adm-btn-sm pc-btn">Modifier mon profil</a>
+              </div>
+            </div>
+          } @else {
+            <div class="pc-body">
+              <div class="adm-skel sk-avatar"></div>
+              <div class="pc-info"><div class="adm-skel sk-line w60"></div><div class="adm-skel sk-line"></div><div class="adm-skel sk-line w80"></div><div class="adm-skel sk-line w40"></div></div>
+            </div>
+          }
+        </section>
+
+        <!-- Fidélité -->
+        <section class="adm-card card loyalty-card" aria-labelledby="t-fid">
+          <h2 id="t-fid" class="lc-title"><i class="fa-solid fa-crown"></i> Mes points fidélité</h2>
+          @if (d) {
+            <p class="lc-points"><strong>{{ formatNumber(d.loyalty.points) }}</strong> point{{ d.loyalty.points > 1 ? 's' : '' }}</p>
+            <p class="lc-value">Soit <strong>{{ formatPrice(d.loyalty.value) }}</strong> de réduction</p>
+            @if (d.loyalty.tier.next) {
+              <div class="lc-progress" [attr.aria-label]="'Progression vers ' + d.loyalty.tier.next.label">
+                <span [style.width.%]="d.loyalty.tier.progress"></span>
+              </div>
+              <p class="lc-next">Encore {{ d.loyalty.tier.next.missing }} pts pour « {{ d.loyalty.tier.next.label }} »</p>
+            }
+          } @else {
+            <div class="adm-skel sk-line w60 tall"></div><div class="adm-skel sk-line w80"></div>
+          }
+          <a routerLink="/compte/fidelite" class="adm-btn lc-btn">Voir mes avantages</a>
+        </section>
+      </div>
+
+      <!-- Commandes -->
+      <section class="adm-card card orders-card" aria-labelledby="t-cmd">
+        <div class="card-head">
+          <h2 id="t-cmd" class="card-title">Mes commandes</h2>
+          <a routerLink="/compte/commandes" class="head-link">Voir toutes mes commandes <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="ostats">
+          <a routerLink="/compte/commandes" class="ostat">
+            <span class="ostat-icon peach"><i class="fa-solid fa-box-open"></i></span>
+            <span><small>Total commandes</small><strong>{{ d ? d.orders.total : '—' }}</strong></span>
+          </a>
+          <a routerLink="/compte/commandes" [queryParams]="{ statut: 'en-cours' }" class="ostat">
+            <span class="ostat-icon amber"><i class="fa-regular fa-clock"></i></span>
+            <span><small>En cours</small><strong>{{ d ? d.orders.inProgress : '—' }}</strong></span>
+          </a>
+          <a routerLink="/compte/commandes" [queryParams]="{ statut: 'livrees' }" class="ostat">
+            <span class="ostat-icon green"><i class="fa-solid fa-truck"></i></span>
+            <span><small>Livrées</small><strong>{{ d ? d.orders.delivered : '—' }}</strong></span>
+          </a>
+          <a routerLink="/compte/commandes" [queryParams]="{ statut: 'annulees' }" class="ostat">
+            <span class="ostat-icon grey"><i class="fa-solid fa-ban"></i></span>
+            <span><small>Annulées</small><strong>{{ d ? d.orders.cancelled : '—' }}</strong></span>
+          </a>
+        </div>
+
+        <h3 class="sub-title">Dernière commande</h3>
+        @if (d?.lastOrder; as o) {
+          <div class="last-order">
+            <div class="lo-thumbs">
+              @for (img of o.images; track $index) {
+                <img [src]="image(img)" alt="" loading="lazy" />
+              }
+              @if (o.items > o.images.length) {
+                <span class="lo-more">+{{ o.items - o.images.length }}</span>
+              }
+            </div>
+            <div class="lo-info">
+              <strong>Commande #{{ o.orderNumber }}</strong>
+              <small>{{ formatDate(o.createdAt) }}</small>
+              <span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+              <span class="lo-total">{{ formatPrice(o.total) }}</span>
+            </div>
+            <a [routerLink]="['/compte/commandes', o.id]" class="adm-btn adm-btn-ghost adm-btn-sm lo-btn">Voir le détail <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        } @else if (d) {
+          <div class="empty-inline">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <p>Vous n'avez pas encore passé de commande.</p>
+            <a routerLink="/boutique" class="adm-btn adm-btn-sm">Découvrir la boutique</a>
+          </div>
+        } @else {
+          <div class="adm-skel sk-block"></div>
+        }
+      </section>
+
+      <!-- Favoris -->
+      <section class="adm-card card fav-card" aria-labelledby="t-fav">
+        <div class="card-head">
+          <h2 id="t-fav" class="card-title with-icon"><i class="fa-regular fa-heart"></i> Mes favoris</h2>
+          <a routerLink="/compte/favoris" class="head-link">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        @if (d) {
+          @if (favoriteItems().length) {
+            <div class="fav-grid">
+              @for (p of favoriteItems(); track p.productId) {
+                <article class="fav-item">
+                  <a [routerLink]="['/produit', p.slug]" class="fav-img">
+                    <img [src]="image(p.image)" [alt]="p.name" loading="lazy" />
+                  </a>
+                  <button type="button" class="fav-heart" (click)="favorites.remove(p.productId)" aria-label="Retirer des favoris" title="Retirer des favoris">
+                    <i class="fa-solid fa-heart"></i>
+                  </button>
+                  <a [routerLink]="['/produit', p.slug]" class="fav-name">{{ p.name }}</a>
+                  <span class="fav-price">{{ formatPrice(effectivePrice(p)) }}</span>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="empty-inline">
+              <i class="fa-regular fa-heart"></i>
+              <p>Ajoutez vos produits préférés en touchant le cœur sur leur fiche.</p>
+              <a routerLink="/boutique" class="adm-btn adm-btn-ghost adm-btn-sm">Parcourir les produits</a>
+            </div>
+          }
+        } @else {
+          <div class="fav-grid">
+            @for (i of [1, 2, 3, 4]; track i) { <div class="adm-skel sk-fav"></div> }
+          </div>
+        }
+      </section>
+    </div>
+
+    <aside class="col-side">
+      <section class="adm-card card brand-card">
+        <h2><i class="fa-solid fa-leaf"></i><span>Des produits authentiques pour une beauté naturelle</span></h2>
+        <p>Nera Cosmétique vous propose une sélection de soins de qualité, importés de France, pour révéler votre beauté au naturel.</p>
+        <a routerLink="/boutique" class="head-link">Découvrir nos produits <i class="fa-solid fa-arrow-right"></i></a>
+      </section>
+
+      <section class="adm-card card addr-card" aria-labelledby="t-addr">
+        <div class="card-head">
+          <h2 id="t-addr" class="card-title with-icon sm"><i class="fa-solid fa-location-dot"></i> Mes adresses</h2>
+          <a routerLink="/compte/adresses" class="head-link strong">Gérer</a>
+        </div>
+        @if (d?.address; as a) {
+          <a routerLink="/compte/adresses" class="addr-box">
+            <i class="fa-solid fa-house addr-icon"></i>
+            <span class="addr-text">
+              <strong>{{ a.firstName }} {{ a.lastName }}</strong>
+              <span>{{ a.addressLine1 }}</span>
+              <span>{{ a.city }}</span>
+            </span>
+            <i class="fa-solid fa-chevron-right addr-caret"></i>
+          </a>
+        } @else if (d) {
+          <p class="muted">Aucune adresse enregistrée pour le moment.</p>
+        } @else {
+          <div class="adm-skel sk-block sm"></div>
+        }
+        <a routerLink="/compte/adresses" [queryParams]="{ nouveau: 1 }" class="adm-btn adm-btn-ghost addr-btn">Ajouter une nouvelle adresse</a>
+      </section>
+
+      <section class="adm-card card help-card" aria-labelledby="t-help">
+        <h2 id="t-help" class="card-title with-icon sm"><i class="fa-solid fa-headset"></i> Aide & support</h2>
+        <a routerLink="/compte/support" fragment="faq" class="help-row">
+          <i class="fa-regular fa-comments help-icon"></i>
+          <span><strong>FAQ</strong><small>Trouvez des réponses à vos questions</small></span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a routerLink="/compte/support" fragment="contact" class="help-row">
+          <i class="fa-regular fa-envelope help-icon"></i>
+          <span><strong>Nous contacter</strong><small>Une équipe à votre écoute</small></span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a routerLink="/compte/support" fragment="retours" class="help-row">
+          <i class="fa-solid fa-rotate-left help-icon"></i>
+          <span><strong>Retour & remboursement</strong><small>Consultez notre politique</small></span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </section>
+    </aside>
+  </div>
+}

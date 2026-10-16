@@ -30,11 +30,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent)
   },
   {
-    path: 'compte',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/account/profile/profile.component').then(m => m.ProfileComponent)
-  },
-  {
     path: 'compte/connexion',
     loadComponent: () => import('./features/account/login/login.component').then(m => m.LoginComponent)
   },
@@ -51,14 +46,9 @@ export const routes: Routes = [
     loadComponent: () => import('./features/account/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
   {
-    path: 'compte/commandes',
+    path: 'compte',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/account/orders-history/orders-history.component').then(m => m.OrdersHistoryComponent)
-  },
-  {
-    path: 'compte/commandes/:id',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/account/order-detail/order-detail.component').then(m => m.OrderDetailComponent)
+    loadChildren: () => import('./features/account/account.routes').then(m => m.accountRoutes)
   },
   {
     path: 'a-propos',

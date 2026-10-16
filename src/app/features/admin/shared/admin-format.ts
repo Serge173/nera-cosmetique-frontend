@@ -19,7 +19,9 @@ export const PAYMENT_LABELS: Record<string, string> = {
   cod: 'Paiement à la livraison',
   orange_money: 'Orange Money',
   mtn_money: 'MTN Money',
+  mtn_momo: 'MTN Mobile Money',
   moov_money: 'Moov Money',
+  moov: 'Moov Money',
   wave: 'Wave',
   card: 'Carte bancaire',
 };
