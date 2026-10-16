@@ -12,7 +12,6 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "build:prod": "ng build --configuration production",
-    "build:prod:netlify": "node scripts/set-api-url.js && ng build --configuration production",
     "postinstall": "node scripts/copy-fontawesome.js"
   },
   "private": true,
