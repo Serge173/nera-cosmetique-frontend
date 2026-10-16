@@ -67,6 +67,17 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./admin-slides/admin-slides.component').then(m => m.AdminSlidesComponent)
       },
       {
+        path: 'contenu',
+        title: 'Pages & infos — Nera Admin',
+        loadComponent: () => import('./admin-content/admin-content.component').then(m => m.AdminContentComponent)
+      },
+      {
+        path: 'contenu/:slug',
+        title: 'Modifier une page — Nera Admin',
+        loadComponent: () => import('./admin-content/admin-page-editor.component').then(m => m.AdminPageEditorComponent),
+        canDeactivate: [(c: { canLeave: () => boolean }) => c.canLeave()]
+      },
+      {
         path: 'parametres',
         title: 'Paramètres — Nera Admin',
         loadComponent: () => import('./admin-settings/admin-settings.component').then(m => m.AdminSettingsComponent)

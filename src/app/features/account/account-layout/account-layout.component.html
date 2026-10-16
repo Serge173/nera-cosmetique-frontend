@@ -40,13 +40,15 @@
     </a>
 
     <div class="side-foot">
-      <p class="sf-brand">Nera Cosmétique</p>
+      <p class="sf-brand">{{ site.settings().storeName }}</p>
       <p class="sf-copy">© {{ year }}. Tous droits réservés.</p>
       <div class="sf-social">
-        <a href="https://www.facebook.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="https://www.instagram.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-        <a href="https://www.tiktok.com/@neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-        <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        @for (n of site.socials().slice(0, 4); track n.key) {
+          <a [href]="n.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="n.label"><i [class]="n.icon"></i></a>
+        }
+        @if (site.whatsappUrl()) {
+          <a [href]="site.whatsappUrl()" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        }
       </div>
     </div>
   </aside>

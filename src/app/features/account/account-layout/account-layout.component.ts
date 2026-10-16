@@ -5,6 +5,7 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { filter, map } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService, User } from '../../../core/services/auth.service';
+import { SiteService } from '../../../core/services/site.service';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
 import { formatDateTime, statusLabel, statusTone } from '../../admin/shared/admin-format';
 import { AccountOverviewService } from '../shared/account-overview.service';
@@ -28,6 +29,7 @@ export class AccountLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private auth = inject(AuthService);
   private api = inject(ApiService);
+  readonly site = inject(SiteService);
   private destroyRef = inject(DestroyRef);
   private overviewService = inject(AccountOverviewService);
 

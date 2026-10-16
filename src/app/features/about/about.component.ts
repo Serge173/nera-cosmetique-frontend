@@ -1,112 +1,96 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
+import { AboutContent, SiteService } from '../../core/services/site.service';
+import { TextBlocksComponent } from '../../shared/components/text-blocks/text-blocks.component';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule, TextBlocksComponent],
   template: `
+    @if (content(); as c) {
     <div class="about">
-      <!-- Hero -->
       <header class="about-hero">
         <div class="about-hero-bg" aria-hidden="true"></div>
         <div class="container">
-          <p class="about-hero-label">Notre histoire</p>
-          <h1 class="about-hero-title">Nera Cosmétique</h1>
-          <p class="about-hero-tagline">La beauté authentique, importée de France pour la Côte d'Ivoire.</p>
+          @if (c.heroLabel) { <p class="about-hero-label">{{ fill(c.heroLabel) }}</p> }
+          <h1 class="about-hero-title">{{ fill(c.heroTitle) }}</h1>
+          @if (c.heroTagline) { <p class="about-hero-tagline">{{ fill(c.heroTagline) }}</p> }
         </div>
       </header>
 
-      <!-- Notre histoire + visuel boutique -->
-      <section class="about-section about-section--light">
-        <div class="container">
-          <div class="about-section-inner about-section-inner--with-image">
-            <div class="about-section-content">
-              <span class="about-section-label">Qui sommes-nous</span>
-              <h2 class="about-section-title">Une passion devenue projet</h2>
-              <p class="about-section-lead">
-                Nera Cosmétique est née de l'envie d'offrir aux femmes ivoiriennes un accès simple et fiable aux meilleurs soins et cosmétiques français.
-              </p>
-              <p>
-                Convaincus que la qualité ne doit pas être un luxe réservé à quelques-uns, nous sélectionnons avec soin des marques reconnues et des produits authentiques, importés directement de France. Chaque article que nous proposons répond à des critères stricts : formulation sûre, efficacité prouvée et traçabilité garantie.
-              </p>
-              <p>
-                Aujourd'hui, Nera Cosmétique s'impose comme un partenaire de confiance pour prendre soin de sa peau et de son bien-être au quotidien, partout en Côte d'Ivoire.
-              </p>
-            </div>
-            <div class="about-section-visual">
-              <div class="about-image-wrap">
-                <img src="/assets/images/im2.jpeg" alt="Sélection de produits cosmétiques Nera Cosmétique – soins et marques françaises" width="600" height="400" loading="lazy" />
-                <span class="about-image-badge">Import France</span>
+      @if (c.storyTitle || c.storyLead || c.storyBody || c.imageUrl) {
+        <section class="about-section about-section--light">
+          <div class="container">
+            <div class="about-section-inner" [class.no-image]="!c.imageUrl">
+              <div class="about-section-content">
+                @if (c.storyLabel) { <span class="about-section-label">{{ fill(c.storyLabel) }}</span> }
+                @if (c.storyTitle) { <h2 class="about-section-title">{{ fill(c.storyTitle) }}</h2> }
+                @if (c.storyLead) { <p class="about-section-lead">{{ fill(c.storyLead) }}</p> }
+                @if (c.storyBody) { <app-text-blocks class="about-story-body" [text]="fill(c.storyBody)" /> }
               </div>
+              @if (c.imageUrl) {
+                <div class="about-section-visual">
+                  <div class="about-image-wrap">
+                    <img [src]="c.imageUrl" [alt]="'Sélection de produits ' + site.settings().storeName" width="600" height="400" loading="lazy" />
+                    @if (c.imageBadge) { <span class="about-image-badge">{{ c.imageBadge }}</span> }
+                  </div>
+                </div>
+              }
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      }
 
-      <!-- Mission & Vision -->
-      <section class="about-section about-section--accent">
-        <div class="container">
-          <div class="about-mission-grid">
-            <article class="about-mission-card">
-              <div class="about-mission-icon" aria-hidden="true">◆</div>
-              <h3>Notre mission</h3>
-              <p>Proposer une gamme de cosmétiques et soins d'origine française, authentiques et accessibles, pour que chaque cliente puisse prendre soin d'elle en toute confiance.</p>
-            </article>
-            <article class="about-mission-card">
-              <div class="about-mission-icon" aria-hidden="true">◇</div>
-              <h3>Notre vision</h3>
-              <p>Devenir la référence du cosmétique français en Côte d'Ivoire, en alliant qualité des produits, transparence et un service client à l'écoute de vos besoins.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- Nos engagements -->
-      <section class="about-section about-section--light">
-        <div class="container">
-          <span class="about-section-label">Ce qui nous engage</span>
-          <h2 class="about-section-title about-section-title--center">Nos engagements</h2>
-          <div class="about-commitments">
-            <div class="about-commitment">
-              <span class="about-commitment-icon" aria-hidden="true">✓</span>
-              <div>
-                <h4>Produits 100% importés de France</h4>
-                <p>Chaque produit est sourcé auprès de fournisseurs et marques français reconnus. Aucune contrefaçon, aucune provenance floue.</p>
-              </div>
-            </div>
-            <div class="about-commitment">
-              <span class="about-commitment-icon" aria-hidden="true">✓</span>
-              <div>
-                <h4>Qualité et traçabilité</h4>
-                <p>Formulations contrôlées, ingrédients identifiés. Nous privilégions les marques qui partagent nos exigences en matière de sécurité et d'efficacité.</p>
-              </div>
-            </div>
-            <div class="about-commitment">
-              <span class="about-commitment-icon" aria-hidden="true">✓</span>
-              <div>
-                <h4>Service client réactif</h4>
-                <p>Une équipe disponible pour répondre à vos questions sur les produits, les commandes et la livraison. Votre satisfaction guide nos priorités.</p>
-              </div>
-            </div>
-            <div class="about-commitment">
-              <span class="about-commitment-icon" aria-hidden="true">✓</span>
-              <div>
-                <h4>Livraison en Côte d'Ivoire</h4>
-                <p>Livraison rapide et soignée à Abidjan et à l'intérieur du pays. Colis protégés pour que vos produits arrivent dans les meilleures conditions.</p>
-              </div>
+      @if (c.missionText || c.visionText) {
+        <section class="about-section about-section--accent">
+          <div class="container">
+            <div class="about-mission-grid" [class.single]="!c.missionText || !c.visionText">
+              @if (c.missionText) {
+                <article class="about-mission-card">
+                  <div class="about-mission-icon" aria-hidden="true">◆</div>
+                  <h3>{{ fill(c.missionTitle) }}</h3>
+                  <p>{{ fill(c.missionText) }}</p>
+                </article>
+              }
+              @if (c.visionText) {
+                <article class="about-mission-card">
+                  <div class="about-mission-icon" aria-hidden="true">◇</div>
+                  <h3>{{ fill(c.visionTitle) }}</h3>
+                  <p>{{ fill(c.visionText) }}</p>
+                </article>
+              }
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      }
 
-      <!-- CTA -->
+      @if (c.commitments.length) {
+        <section class="about-section about-section--light">
+          <div class="container">
+            @if (c.commitmentsLabel) { <span class="about-section-label about-section-label--center">{{ fill(c.commitmentsLabel) }}</span> }
+            @if (c.commitmentsTitle) { <h2 class="about-section-title about-section-title--center">{{ fill(c.commitmentsTitle) }}</h2> }
+            <div class="about-commitments">
+              @for (item of c.commitments; track $index) {
+                <div class="about-commitment">
+                  <span class="about-commitment-icon" aria-hidden="true">✓</span>
+                  <div>
+                    <h4>{{ fill(item.title) }}</h4>
+                    <p>{{ fill(item.text) }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+      }
+
       <section class="about-cta">
         <div class="container">
           <div class="about-cta-inner">
-            <h2 class="about-cta-title">Prête à découvrir notre sélection ?</h2>
-            <p class="about-cta-text">Parcourez notre boutique ou contactez-nous pour toute question.</p>
+            @if (c.ctaTitle) { <h2 class="about-cta-title">{{ fill(c.ctaTitle) }}</h2> }
+            @if (c.ctaText) { <p class="about-cta-text">{{ fill(c.ctaText) }}</p> }
             <div class="about-cta-actions">
               <a routerLink="/boutique" class="btn btn-primary">Voir la boutique</a>
               <a routerLink="/contact" class="btn btn-outline">Nous contacter</a>
@@ -115,6 +99,14 @@ import { RouterModule } from '@angular/router';
         </div>
       </section>
     </div>
+    } @else if (error()) {
+      <div class="about-state">
+        <p>Impossible de charger cette page pour le moment.</p>
+        <button type="button" class="btn btn-primary" (click)="load()">Réessayer</button>
+      </div>
+    } @else {
+      <div class="about-state"><span class="about-spinner" aria-label="Chargement"></span></div>
+    }
   `,
   styles: [`
     .about {
@@ -242,6 +234,51 @@ import { RouterModule } from '@angular/router';
     .about-section-content p:last-child {
       margin-bottom: 0;
     }
+
+    .about-story-body {
+      font-size: 1rem;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    .about-section-inner.no-image {
+      grid-template-columns: 1fr;
+    }
+
+    .about-section-inner.no-image .about-section-content {
+      max-width: 760px;
+    }
+
+    .about-section-label--center {
+      display: block;
+      text-align: center;
+    }
+
+    .about-mission-grid.single {
+      grid-template-columns: 1fr;
+      max-width: 560px;
+    }
+
+    .about-state {
+      min-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-light);
+    }
+
+    .about-spinner {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 102, 0, 0.2);
+      border-top-color: var(--primary-color);
+      animation: about-spin .8s linear infinite;
+    }
+
+    @keyframes about-spin { to { transform: rotate(360deg); } }
 
     .about-section-visual {
       display: flex;
@@ -473,4 +510,26 @@ import { RouterModule } from '@angular/router';
     }
   `],
 })
-export class AboutComponent {}
+export class AboutComponent implements OnInit {
+  readonly site = inject(SiteService);
+  private destroyRef = inject(DestroyRef);
+
+  readonly content = signal<AboutContent | null>(null);
+  readonly error = signal(false);
+
+  ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
+    this.error.set(false);
+    this.site.page<AboutContent>('a-propos').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (page) => this.content.set(page.content),
+      error: () => this.error.set(true),
+    });
+  }
+
+  fill(text: string): string {
+    return this.site.fill(text);
+  }
+}

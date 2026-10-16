@@ -3,6 +3,7 @@ import { FavoritesService } from '../../../core/services/favorites.service';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
 import { ApiService } from '../../../core/services/api.service';
 import { CartService } from '../../../core/services/cart.service';
 import { Product } from '../../../models/product.model';
@@ -86,13 +87,26 @@ import { ToastService } from '../../../core/services/toast.service';
               </div>
             </div>
           </div>
+        } @else if (loading) {
+          <div class="pd-state" aria-busy="true"><span class="pd-spinner"></span> Chargement du produit…</div>
         } @else {
-          <p>Produit non trouvé</p>
+          <div class="pd-state">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <h1>Produit introuvable</h1>
+            <p>Ce produit n’existe pas ou n’est plus disponible.</p>
+            <a routerLink="/boutique" class="btn btn-primary">Voir la boutique</a>
+          </div>
         }
       </div>
     </div>
   `,
   styles: [`
+    .pd-state { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 72px 16px; color: var(--text-light); }
+    .pd-state > i { font-size: 2rem; color: var(--primary-color); }
+    .pd-state h1 { margin: 0; font-size: 1.5rem; color: var(--text-dark); }
+    .pd-state p { margin: 0 0 8px; }
+    .pd-spinner { width: 28px; height: 28px; border: 3px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%; animation: pd-spin .8s linear infinite; }
+    @keyframes pd-spin { to { transform: rotate(360deg); } }
     .product-content {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -246,7 +260,9 @@ import { ToastService } from '../../../core/services/toast.service';
 })
 export class ProductDetailComponent implements OnInit {
   readonly favorites = inject(FavoritesService);
+  private title = inject(Title);
   product: Product | null = null;
+  loading = true;
   mainImage = '';
   quantity = 1;
   activeTab = 'description';
@@ -270,9 +286,21 @@ export class ProductDetailComponent implements OnInit {
   }
 
   loadProduct(slug: string) {
-    this.api.get<Product>(`/products/slug/${slug}`).subscribe(product => {
-      this.product = product;
-      this.mainImage = product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url || '';
+    this.product = null;
+    this.loading = true;
+    this.quantity = 1;
+    this.activeTab = 'description';
+    this.api.get<Product>(`/products/slug/${encodeURIComponent(slug)}`).subscribe({
+      next: product => {
+        this.loading = false;
+        this.product = product;
+        if (product?.name) this.title.setTitle(`${product.name} — Nera Cosmétique`);
+        this.mainImage = product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url || '';
+      },
+      error: () => {
+        this.loading = false;
+        this.title.setTitle('Produit introuvable — Nera Cosmétique');
+      },
     });
   }
 

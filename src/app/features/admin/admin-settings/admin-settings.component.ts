@@ -44,7 +44,7 @@ const emptyZone = (): ZoneForm => ({
 
     <div class="shortcuts">
       @for (s of shortcuts; track s.title) {
-        <a class="adm-card sc" [routerLink]="s.link">
+        <a class="adm-card sc" [routerLink]="s.link" [queryParams]="s.query">
           <span class="sc-icon"><i class="fa-solid {{ s.icon }}"></i></span>
           <span class="sc-text"><strong>{{ s.title }}</strong><small>{{ s.text }}</small></span>
           <i class="fa-solid fa-chevron-right sc-caret"></i>
@@ -163,7 +163,9 @@ export class AdminSettingsComponent implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
 
-  readonly shortcuts = [
+  readonly shortcuts: { icon: string; title: string; text: string; link: string; query?: Record<string, string> }[] = [
+    { icon: 'fa-address-card', title: 'Informations de la boutique', text: 'Coordonnées, adresse, réseaux, mentions légales', link: '/admin/contenu' },
+    { icon: 'fa-file-lines', title: 'Pages du site', text: 'À propos, CGV, confidentialité, retours', link: '/admin/contenu', query: { onglet: 'pages' } },
     { icon: 'fa-folder-open', title: 'Catégories', text: 'Organisation du catalogue', link: '/admin/categories' },
     { icon: 'fa-copyright', title: 'Marques', text: 'Marques distribuées', link: '/admin/brands' },
     { icon: 'fa-users-gear', title: 'Utilisateurs & accès', text: 'Comptes administrateurs et clients', link: '/admin/users' },

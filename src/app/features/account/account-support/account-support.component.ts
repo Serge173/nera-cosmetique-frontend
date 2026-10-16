@@ -1,14 +1,13 @@
-import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
+import { SiteService } from '../../../core/services/site.service';
 import { formatPrice } from '../../admin/shared/admin-format';
 
 interface DeliveryOption { method: string; price: number; freeFrom: number | null }
 
 interface Faq { q: string; a: string; link?: { label: string; path: string; fragment?: string } }
-
-const WHATSAPP = 'https://wa.me/2250789684467';
 
 @Component({
   selector: 'app-account-support',
@@ -23,14 +22,14 @@ const WHATSAPP = 'https://wa.me/2250789684467';
     </div>
 
     <div class="quick">
-      <a [href]="whatsapp" target="_blank" rel="noopener noreferrer" class="adm-card q-card wa">
+      <a [href]="whatsapp()" target="_blank" rel="noopener noreferrer" class="adm-card q-card wa">
         <span class="q-icon"><i class="fa-brands fa-whatsapp"></i></span>
-        <span class="q-text"><strong>WhatsApp</strong><small>+225 07 89 68 44 67</small></span>
+        <span class="q-text"><strong>WhatsApp</strong><small>{{ site.settings().whatsapp }}</small></span>
         <i class="fa-solid fa-arrow-up-right-from-square q-go"></i>
       </a>
-      <a href="mailto:skeayeni&#64;gmail.com" class="adm-card q-card">
+      <a [href]="'mailto:' + site.settings().email" class="adm-card q-card">
         <span class="q-icon"><i class="fa-regular fa-envelope"></i></span>
-        <span class="q-text"><strong>E-mail</strong><small>skeayeni&#64;gmail.com</small></span>
+        <span class="q-text"><strong>E-mail</strong><small>{{ site.settings().email }}</small></span>
         <i class="fa-solid fa-chevron-right q-go"></i>
       </a>
       <a routerLink="/compte/commandes" class="adm-card q-card">
@@ -64,21 +63,25 @@ const WHATSAPP = 'https://wa.me/2250789684467';
       <div class="side">
         <section class="adm-card pad" id="contact" aria-labelledby="contact-title">
           <h2 id="contact-title" class="title"><i class="fa-solid fa-headset"></i> Nous contacter</h2>
-          <p class="muted">Le plus rapide : écrivez-nous sur WhatsApp en indiquant votre numéro de commande. Nous répondons sous 24 à 48 h ouvrées.</p>
-          <a [href]="whatsapp" target="_blank" rel="noopener noreferrer" class="adm-btn block wa-btn"><i class="fa-brands fa-whatsapp"></i> Écrire sur WhatsApp</a>
+          <p class="muted">Le plus rapide : écrivez-nous sur WhatsApp en indiquant votre numéro de commande. {{ site.settings().responseTime }}</p>
+          <a [href]="whatsapp()" target="_blank" rel="noopener noreferrer" class="adm-btn block wa-btn"><i class="fa-brands fa-whatsapp"></i> Écrire sur WhatsApp</a>
           <a routerLink="/contact" class="adm-btn adm-btn-ghost block"><i class="fa-regular fa-paper-plane"></i> Formulaire de contact</a>
         </section>
 
         <section class="adm-card pad" id="retours" aria-labelledby="returns-title">
           <h2 id="returns-title" class="title"><i class="fa-solid fa-rotate-left"></i> Retour & remboursement</h2>
           <p class="muted">Un produit abîmé ou non conforme ? Contactez-nous avec votre numéro de commande et une photo du produit : nous trouverons une solution ensemble.</p>
-          <a [href]="whatsapp" target="_blank" rel="noopener noreferrer" class="head-link">Signaler un problème <i class="fa-solid fa-arrow-right"></i></a>
+          <div class="return-links">
+            <a [href]="whatsapp()" target="_blank" rel="noopener noreferrer" class="head-link">Signaler un problème <i class="fa-solid fa-arrow-right"></i></a>
+            <a routerLink="/retours" class="head-link">Lire la politique de retour <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
         </section>
       </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
+    .return-links { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
     .q-card { display: flex; align-items: center; gap: 14px; padding: 18px; text-decoration: none; color: inherit; transition: transform .2s, box-shadow .2s; }
     .q-card:hover { transform: translateY(-2px); box-shadow: var(--adm-shadow-lg); }
@@ -121,7 +124,8 @@ export class AccountSupportComponent implements OnInit, AfterViewInit {
   private host = inject(ElementRef<HTMLElement>);
   private destroyRef = inject(DestroyRef);
 
-  readonly whatsapp = WHATSAPP;
+  readonly site = inject(SiteService);
+  readonly whatsapp = computed(() => this.site.whatsappUrl());
   readonly openIndex = signal<number | null>(0);
   readonly faqs = signal<Faq[]>(this.buildFaqs(null));
 

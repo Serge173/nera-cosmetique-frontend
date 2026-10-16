@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { SiteService } from '../../../core/services/site.service';
 
 @Component({
   selector: 'app-footer',
@@ -10,9 +11,15 @@ import { RouterModule } from '@angular/router';
     <footer class="footer">
       <div class="container">
         <div class="footer-content">
-          <div class="footer-section">
-            <h3>Nera Cosmétique</h3>
-            <p>Produits cosmétiques importés de France</p>
+          @let s = site.settings();
+          <div class="footer-section footer-about">
+            <h3>{{ s.storeName }}</h3>
+            @if (s.tagline) { <p>{{ s.tagline }}</p> }
+            <ul class="footer-contact">
+              @if (s.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + s.email">{{ s.email }}</a></li> }
+              @if (s.phone) { <li><i class="fa-solid fa-phone" aria-hidden="true"></i><a [href]="site.phoneHref()">{{ s.phone }}</a></li> }
+              @if (site.fullAddress()) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>{{ site.fullAddress() }}</span></li> }
+            </ul>
           </div>
           <div class="footer-section">
             <h4>Navigation</h4>
@@ -27,36 +34,37 @@ import { RouterModule } from '@angular/router';
             <a routerLink="/retours">Retours</a>
             <a routerLink="/mentions-legales">Mentions légales</a>
           </div>
-          <div class="footer-section footer-map">
-            <h4>Localisation</h4>
-            <div class="footer-map-frame" aria-label="Carte Google Maps de la localisation Nera Cosmétique">
-              <iframe
-                title="Localisation Nera Cosmétique"
-                src="https://www.google.com/maps?q=Abidjan,+C%C3%B4te+d'Ivoire&output=embed"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade">
-              </iframe>
+          @if (site.mapUrl(); as map) {
+            <div class="footer-section footer-map">
+              <h4>Localisation</h4>
+              <div class="footer-map-frame">
+                <iframe [title]="'Localisation ' + s.storeName" [src]="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
             </div>
-          </div>
-          <div class="footer-section footer-social">
-            <h4>Réseaux sociaux</h4>
-            <div class="social-links">
-              <a href="https://www.tiktok.com/@neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i><span>TikTok</span></a>
-              <a href="https://www.facebook.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i><span>Facebook</span></a>
-              <a href="https://www.instagram.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i><span>Instagram</span></a>
-              <a href="https://twitter.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i><span>Twitter</span></a>
-              <a href="https://www.snapchat.com/add/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Snapchat"><i class="fa-brands fa-snapchat"></i><span>Snapchat</span></a>
-              <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="whatsapp-link"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></a>
+          }
+          @if (site.socials().length || site.whatsappUrl()) {
+            <div class="footer-section footer-social">
+              <h4>Réseaux sociaux</h4>
+              <div class="social-links">
+                @for (n of site.socials(); track n.key) {
+                  <a [href]="n.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="n.label"><i [class]="n.icon"></i><span>{{ n.label }}</span></a>
+                }
+                @if (site.whatsappUrl()) {
+                  <a [href]="site.whatsappUrl()" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="whatsapp-link"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></a>
+                }
+              </div>
             </div>
-          </div>
+          }
         </div>
         <div class="footer-bottom">
-          <p>&copy; {{ currentYear }} Nera Cosmétique. Tous droits réservés.</p>
+          <p>&copy; {{ currentYear }} {{ s.storeName }}. Tous droits réservés.</p>
         </div>
       </div>
-      <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="WhatsApp">
-        <i class="fa-brands fa-whatsapp"></i>
-      </a>
+      @if (site.whatsappUrl()) {
+        <a [href]="site.whatsappUrl()" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="Nous écrire sur WhatsApp">
+          <i class="fa-brands fa-whatsapp"></i>
+        </a>
+      }
     </footer>
   `,
   styles: [`
@@ -84,6 +92,11 @@ import { RouterModule } from '@angular/router';
     .footer-section a:hover {
       color: white;
     }
+    .footer-about p { color: #ccc; margin-bottom: 14px; }
+    .footer-contact { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .footer-contact li { display: flex; gap: 10px; align-items: baseline; color: #ccc; font-size: .92rem; word-break: break-word; }
+    .footer-contact i { color: var(--primary-color); width: 1em; text-align: center; flex-shrink: 0; }
+    .footer-contact a { display: inline; margin: 0; }
     .footer-social .social-links {
       display: flex;
       flex-wrap: wrap;
@@ -178,5 +191,6 @@ import { RouterModule } from '@angular/router';
   `]
 })
 export class FooterComponent {
+  readonly site = inject(SiteService);
   currentYear = new Date().getFullYear();
 }

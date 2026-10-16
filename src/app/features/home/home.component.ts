@@ -419,7 +419,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     {
       image: 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=2400&q=85',
       title: 'Livraison rapide en Côte d’Ivoire',
-      description: 'Abidjan et intérieur du pays, paiement à la livraison ou Mobile Money sécurisé.',
+      description: 'Abidjan et intérieur du pays, paiement en espèces à la livraison.',
       link: '/boutique',
       linkLabel: 'Commander maintenant'
     }

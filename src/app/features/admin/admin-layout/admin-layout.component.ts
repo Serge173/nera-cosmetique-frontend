@@ -51,6 +51,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     { label: 'Catégories', icon: 'fa-folder-open', path: '/admin/categories', also: ['/admin/brands'] },
     { label: 'Rapports & Analyses', icon: 'fa-chart-line', path: '/admin/rapports' },
     { label: 'Marketing', icon: 'fa-bullhorn', path: '/admin/marketing', also: ['/admin/slides'] },
+    { label: 'Pages & infos', icon: 'fa-file-lines', path: '/admin/contenu' },
     { label: 'Paramètres', icon: 'fa-gear', path: '/admin/parametres', also: ['/admin/users'] },
   ];
 

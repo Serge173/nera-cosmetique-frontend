@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { SiteService } from '../../../core/services/site.service';
 import { Order } from '../../../models/order.model';
 import { safeProductImageUrl } from '../../../shared/utils/placeholder-image';
 import { formatDateTime, formatPrice, paymentLabel, statusLabel, statusTone } from '../../admin/shared/admin-format';
@@ -223,6 +224,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private api = inject(ApiService);
   private reorderService = inject(ReorderService);
+  private site = inject(SiteService);
 
   readonly steps = STEPS;
   readonly order = signal<Order | null>(null);
@@ -271,8 +273,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   }
 
   whatsappLink(o: Order): string {
-    const text = `Bonjour Nera Cosmétique, j'ai une question concernant ma commande #${o.orderNumber}.`;
-    return `https://wa.me/2250789684467?text=${encodeURIComponent(text)}`;
+    return this.site.whatsappUrl(`Bonjour ${this.site.settings().storeName}, j'ai une question concernant ma commande #${o.orderNumber}.`);
   }
 
   reorder(o: Order): void {

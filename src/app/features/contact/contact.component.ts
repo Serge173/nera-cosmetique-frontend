@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { SiteService } from '../../core/services/site.service';
 import { ToastService } from '../../core/services/toast.service';
 
 @Component({
@@ -96,38 +97,67 @@ import { ToastService } from '../../core/services/toast.service';
 
             <!-- Infos & Carte -->
             <aside class="contact-sidebar">
+              @let s = site.settings();
               <div class="contact-info-card">
                 <h3 class="contact-info-title">Coordonnées</h3>
-                <p class="contact-info-desc">Réponse sous 24 à 48 h ouvrées.</p>
+                @if (s.responseTime) { <p class="contact-info-desc">{{ s.responseTime }}</p> }
                 <ul class="contact-info-list">
-                  <li>
-                    <span class="contact-info-icon" aria-hidden="true">✉</span>
-                    <div>
-                      <span class="contact-info-label">Email</span>
-                      <a href="mailto:skeayeni&#64;gmail.com" class="contact-info-value">skeayeni&#64;gmail.com</a>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="contact-info-icon" aria-hidden="true">📱</span>
-                    <div>
-                      <span class="contact-info-label">WhatsApp</span>
-                      <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" class="contact-info-value">+225 07 89 68 44 67</a>
-                    </div>
-                  </li>
+                  @if (s.email) {
+                    <li>
+                      <span class="contact-info-icon" aria-hidden="true"><i class="fa-regular fa-envelope"></i></span>
+                      <div>
+                        <span class="contact-info-label">E-mail</span>
+                        <a [href]="'mailto:' + s.email" class="contact-info-value">{{ s.email }}</a>
+                      </div>
+                    </li>
+                  }
+                  @if (site.whatsappUrl()) {
+                    <li>
+                      <span class="contact-info-icon" aria-hidden="true"><i class="fa-brands fa-whatsapp"></i></span>
+                      <div>
+                        <span class="contact-info-label">WhatsApp</span>
+                        <a [href]="site.whatsappUrl()" target="_blank" rel="noopener noreferrer" class="contact-info-value">{{ s.whatsapp }}</a>
+                      </div>
+                    </li>
+                  }
+                  @if (s.phone && s.phone !== s.whatsapp) {
+                    <li>
+                      <span class="contact-info-icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></span>
+                      <div>
+                        <span class="contact-info-label">Téléphone</span>
+                        <a [href]="site.phoneHref()" class="contact-info-value">{{ s.phone }}</a>
+                      </div>
+                    </li>
+                  }
+                  @if (site.fullAddress()) {
+                    <li>
+                      <span class="contact-info-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+                      <div>
+                        <span class="contact-info-label">Adresse</span>
+                        <span class="contact-info-text">{{ site.fullAddress() }}</span>
+                      </div>
+                    </li>
+                  }
+                  @if (s.openingHours) {
+                    <li>
+                      <span class="contact-info-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
+                      <div>
+                        <span class="contact-info-label">Horaires</span>
+                        <span class="contact-info-text pre">{{ s.openingHours }}</span>
+                      </div>
+                    </li>
+                  }
                 </ul>
               </div>
-              <div class="contact-map-card">
-                <h3 class="contact-info-title">Localisation</h3>
-                <p class="contact-info-desc">Retrouvez notre point de vente sur la carte.</p>
-                <div class="contact-map-frame" aria-label="Carte Google Maps de la localisation Nera Cosmétique">
-                  <iframe
-                    title="Localisation Nera Cosmétique"
-                    src="https://www.google.com/maps?q=Abidjan,+C%C3%B4te+d'Ivoire&output=embed"
-                    loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade">
-                  </iframe>
+              @if (site.mapUrl(); as map) {
+                <div class="contact-map-card">
+                  <h3 class="contact-info-title">Localisation</h3>
+                  <p class="contact-info-desc">Retrouvez-nous sur la carte.</p>
+                  <div class="contact-map-frame">
+                    <iframe [title]="'Localisation ' + s.storeName" [src]="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                  </div>
                 </div>
-              </div>
+              }
             </aside>
           </div>
         </div>
@@ -397,6 +427,16 @@ import { ToastService } from '../../core/services/toast.service';
       text-decoration: underline;
     }
 
+    .contact-info-text {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+
+    .contact-info-text.pre {
+      white-space: pre-line;
+    }
+
     .contact-map-card {
       background: #fff;
       border: 1px solid var(--border-color);
@@ -490,18 +530,26 @@ export class ContactComponent {
   };
   submitting = false;
 
+  readonly site = inject(SiteService);
+
   constructor(private api: ApiService, private toast: ToastService) {}
 
   submitContact() {
+    if (this.submitting) return;
+    const { name, email, message } = this.formData;
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      this.toast.error('Merci de renseigner votre nom, votre e-mail et votre message.');
+      return;
+    }
     this.submitting = true;
     this.api.post('/contact', this.formData).subscribe({
       next: () => {
-        this.toast.success('Message envoyé avec succès !');
+        this.toast.success('Message envoyé ! Nous vous répondrons rapidement.');
         this.formData = { name: '', email: '', phone: '', subject: '', message: '' };
         this.submitting = false;
       },
-      error: () => {
-        this.toast.error('Erreur lors de l\'envoi');
+      error: (err) => {
+        this.toast.error(err?.message || 'Le message n’a pas pu être envoyé. Réessayez.');
         this.submitting = false;
       }
     });
