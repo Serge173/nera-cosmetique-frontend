@@ -4,7 +4,11 @@
   "outputDirectory": "dist/nera-cosmetique-web/browser",
   "rewrites": [
     {
-      "source": "/((?!.*\\.[a-zA-Z0-9]+$).*)",
+      "source": "/(.*)\\.(js|mjs|css|map)",
+      "destination": "/__asset-introuvable"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
