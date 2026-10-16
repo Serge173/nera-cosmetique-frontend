@@ -21,12 +21,12 @@ export class AppUpdateService {
 
   start(): void {
     if (isDevMode() || !this.currentBundle) return;
-    sessionStorage.removeItem(RELOAD_FLAG);
 
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart && this.updateAvailable) {
         this.hardNavigate(event.url);
       } else if (event instanceof NavigationEnd) {
+        sessionStorage.removeItem(RELOAD_FLAG);
         this.check();
       } else if (event instanceof NavigationError && CHUNK_ERROR.test(String(event.error?.message ?? event.error))) {
         this.hardNavigate(event.url);
