@@ -63,17 +63,17 @@ interface Guide {
     .guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
     .g-head { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; background: none; text-align: left; }
     .g-head strong { flex: 1; font-size: .92rem; color: var(--adm-ink); }
-    .g-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--adm-pink-soft); color: var(--adm-pink); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .g-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--adm-orange-soft); color: var(--adm-orange); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .g-caret { font-size: .75rem; color: var(--adm-muted); transition: transform .2s; }
-    .guide.open .g-caret { transform: rotate(180deg); color: var(--adm-pink); }
-    .guide.open { border-color: #f3cadb; }
+    .guide.open .g-caret { transform: rotate(180deg); color: var(--adm-orange); }
+    .guide.open { border-color: #f8d9c5; }
     .g-body { padding: 0 18px 18px 74px; }
     .g-body ol { margin: 0 0 14px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: .86rem; color: var(--adm-text); line-height: 1.5; }
     .statuses { margin-top: 20px; }
     .flow { display: flex; align-items: flex-start; gap: 12px; }
     .flow > div { flex: 1; min-width: 0; }
     .flow p { margin: 8px 0 0; font-size: .78rem; color: var(--adm-muted); line-height: 1.45; }
-    .flow > i { color: #e3b3c7; margin-top: 6px; font-size: .8rem; }
+    .flow > i { color: #e9c5ad; margin-top: 6px; font-size: .8rem; }
     @media (max-width: 1000px) {
       .guides { grid-template-columns: 1fr; }
       .flow { flex-direction: column; }

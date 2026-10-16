@@ -105,8 +105,8 @@ const PAGE_SIZE = 20;
     :host { display: block; }
     .tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
     .tool { display: flex; flex-direction: column; gap: 6px; padding: 20px; text-decoration: none; transition: transform .2s, box-shadow .2s, border-color .2s; }
-    .tool:hover { transform: translateY(-2px); border-color: #f3cadb; box-shadow: 0 12px 26px rgba(214, 69, 127, .12); }
-    .tool-icon { width: 46px; height: 46px; border-radius: 12px; background: var(--adm-pink-soft); color: var(--adm-pink); display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; margin-bottom: 8px; }
+    .tool:hover { transform: translateY(-2px); border-color: #f8d9c5; box-shadow: 0 12px 26px rgba(255, 102, 0, .12); }
+    .tool-icon { width: 46px; height: 46px; border-radius: 12px; background: var(--adm-orange-soft); color: var(--adm-orange); display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; margin-bottom: 8px; }
     .tool strong { color: var(--adm-ink); font-size: .95rem; }
     .tool small { color: var(--adm-muted); font-size: .8rem; flex: 1; }
     .tool .adm-link { margin-top: 8px; }

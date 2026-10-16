@@ -159,17 +159,17 @@ import { DashboardData, PERIODS, toDonut } from '../admin-dashboard/admin-dashbo
     .chg { font-size: .74rem; font-weight: 600; margin-top: 2px; }
     .chg span { font-weight: 400; color: var(--adm-muted); }
     .chg.up { color: #2b9a5a; } .chg.down { color: #d0485a; } .chg.flat { color: var(--adm-muted); }
-    .seg { display: inline-flex; background: #f6eff2; border-radius: 10px; padding: 3px; }
+    .seg { display: inline-flex; background: #f6f2ef; border-radius: 10px; padding: 3px; }
     .seg button { background: none; padding: 7px 14px; border-radius: 8px; font-size: .78rem; font-weight: 600; color: var(--adm-muted); }
-    .seg button.on { background: #fff; color: var(--adm-pink-dark); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .seg button.on { background: #fff; color: var(--adm-orange-dark); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
     .grid-2.wide-left { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
     .hbars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
     .hb-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
     .hb-val { font-size: .8rem; color: var(--adm-muted); white-space: nowrap; }
     .hb-val b { color: var(--adm-ink); }
-    .hb-bar { height: 8px; border-radius: 99px; background: #f5edf1; overflow: hidden; }
-    .hb-bar i { display: block; height: 100%; border-radius: 99px; background: var(--adm-pink); transition: width .4s; }
+    .hb-bar { height: 8px; border-radius: 99px; background: #f5f0ed; overflow: hidden; }
+    .hb-bar i { display: block; height: 100%; border-radius: 99px; background: var(--adm-orange); transition: width .4s; }
     .hb-bar i.amber { background: #e8a93a; } .hb-bar i.orange { background: #ec8a3c; } .hb-bar i.violet { background: #8b6be0; }
     .hb-bar i.blue { background: #4f84e8; } .hb-bar i.green { background: #3aa86a; } .hb-bar i.red { background: #d9566a; }
     .none { color: var(--adm-muted); font-size: .86rem; padding: 16px 0; text-align: center; list-style: none; }
@@ -178,7 +178,7 @@ import { DashboardData, PERIODS, toDonut } from '../admin-dashboard/admin-dashbo
     .pay { list-style: none; margin: 0; padding: 0; }
     .pay li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--adm-line); }
     .pay li:last-child { border-bottom: none; }
-    .pay-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--adm-pink-soft); color: var(--adm-pink); display: inline-flex; align-items: center; justify-content: center; }
+    .pay-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--adm-orange-soft); color: var(--adm-orange); display: inline-flex; align-items: center; justify-content: center; }
     .pay div { flex: 1; display: flex; flex-direction: column; }
     .pay strong { font-size: .85rem; color: var(--adm-ink); }
     .pay small { font-size: .75rem; color: var(--adm-muted); }

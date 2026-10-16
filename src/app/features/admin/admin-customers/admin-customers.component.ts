@@ -234,18 +234,18 @@ const PAGE_SIZE = 15;
     .profile h3 { margin: 0 0 6px; font-size: 1.15rem; }
     .adm-avatar.xl { width: 60px; height: 60px; font-size: 1.1rem; }
     .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
-    .tiles div { background: var(--adm-pink-50); border: 1px solid #f7dfe9; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .tiles div { background: var(--adm-orange-50); border: 1px solid #fae8dc; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
     .tiles span { font-size: .72rem; color: var(--adm-muted); }
     .tiles strong { font-size: .92rem; color: var(--adm-ink); }
-    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; margin: 0; font-size: .85rem; background: #fcf8fa; border-radius: 12px; padding: 14px 16px; }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; margin: 0; font-size: .85rem; background: #fdfaf8; border-radius: 12px; padding: 14px 16px; }
     .kv dt { color: var(--adm-muted); }
     .kv dd { margin: 0; color: var(--adm-ink); word-break: break-word; }
-    .kv a { color: var(--adm-pink-dark); }
+    .kv a { color: var(--adm-orange-dark); }
     .sec-title { font-size: .88rem; margin: 22px 0 10px; }
     .order-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--adm-line); border-radius: 12px; overflow: hidden; }
     .order-list li + li { border-top: 1px solid var(--adm-line); }
     .order-list a { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; transition: background .15s; }
-    .order-list a:hover { background: var(--adm-pink-50); }
+    .order-list a:hover { background: var(--adm-orange-50); }
     .order-list strong { display: block; font-size: .85rem; color: var(--adm-ink); }
     .order-list small { font-size: .74rem; color: var(--adm-muted); }
     .order-list .right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }

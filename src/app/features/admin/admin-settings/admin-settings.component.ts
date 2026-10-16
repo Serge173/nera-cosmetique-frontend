@@ -140,12 +140,12 @@ const emptyZone = (): ZoneForm => ({
     .nowrap { white-space: nowrap; }
     .shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
     .sc { display: flex; align-items: center; gap: 14px; padding: 16px 18px; text-decoration: none; transition: transform .2s, box-shadow .2s, border-color .2s; }
-    .sc:hover { transform: translateY(-2px); border-color: #f3cadb; box-shadow: 0 12px 26px rgba(214, 69, 127, .1); }
-    .sc-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--adm-pink-soft); color: var(--adm-pink); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sc:hover { transform: translateY(-2px); border-color: #f8d9c5; box-shadow: 0 12px 26px rgba(255, 102, 0, .1); }
+    .sc-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--adm-orange-soft); color: var(--adm-orange); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .sc-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     .sc-text strong { font-size: .88rem; color: var(--adm-ink); }
     .sc-text small { font-size: .76rem; color: var(--adm-muted); }
-    .sc-caret { font-size: .7rem; color: #c9bcc3; }
+    .sc-caret { font-size: .7rem; color: #c9c1bc; }
     .security { margin-top: 20px; }
     .sec-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
     .sec-item { display: flex; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid var(--adm-line); }

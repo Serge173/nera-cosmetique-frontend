@@ -27,8 +27,8 @@
   /* Palette cosmétique – sections */
   --cosmetic-cream: #FDF8F5;
   --cosmetic-cream-dark: #F5EDE8;
-  --cosmetic-rose: #FFF0F5;
-  --cosmetic-rose-dark: #FFE4EC;
+  --cosmetic-rose: #FFF4EC;
+  --cosmetic-rose-dark: #FFE8D6;
   --cosmetic-mint: #F0FFF8;
   --cosmetic-mint-dark: #E0F7F0;
   --cosmetic-gold: #FFFBF0;
@@ -193,13 +193,13 @@ img {
     radial-gradient(circle at 80% 70%, rgba(255, 102, 0, 0.03) 0%, transparent 45%);
 }
 
-/* Rose – produits vedette / douceur */
+/* Pêche – produits vedette / douceur */
 .section-cosmetic-rose {
   background: linear-gradient(180deg, var(--cosmetic-rose) 0%, var(--cosmetic-rose-dark) 100%);
 }
 .section-cosmetic-rose::before {
-  background-image: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.25) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(255, 192, 203, 0.15) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 10% 20%, rgba(255, 190, 140, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255, 204, 160, 0.15) 0%, transparent 40%);
 }
 
 /* Menthe – fraîcheur / soin */

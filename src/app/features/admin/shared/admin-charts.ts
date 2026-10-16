@@ -48,8 +48,8 @@ export interface LinePoint {
              (mousemove)="onMove($event)" (touchstart)="onTouch($event)">
           <defs>
             <linearGradient [attr.id]="gid" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--adm-pink)" stop-opacity="0.26" />
-              <stop offset="100%" stop-color="var(--adm-pink)" stop-opacity="0" />
+              <stop offset="0%" stop-color="var(--adm-orange)" stop-opacity="0.26" />
+              <stop offset="100%" stop-color="var(--adm-orange)" stop-opacity="0" />
             </linearGradient>
           </defs>
           @for (t of ticks; track t.y) {
@@ -86,20 +86,20 @@ export interface LinePoint {
     :host { display: block; }
     .lc { position: relative; width: 100%; }
     svg { display: block; overflow: visible; touch-action: pan-y; }
-    .grid { stroke: #f1e7eb; stroke-width: 1; }
-    .ytick, .xtick { fill: #9a8f97; font-size: 11px; font-family: var(--font-body); }
-    .line { fill: none; stroke: var(--adm-pink); stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
-    .dot { fill: var(--adm-pink); stroke: #fff; stroke-width: 2; transition: r .15s; }
-    .guide { stroke: var(--adm-pink); stroke-width: 1; stroke-dasharray: 3 4; opacity: .5; }
+    .grid { stroke: #f1ebe7; stroke-width: 1; }
+    .ytick, .xtick { fill: #9a938f; font-size: 11px; font-family: var(--font-body); }
+    .line { fill: none; stroke: var(--adm-orange); stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+    .dot { fill: var(--adm-orange); stroke: #fff; stroke-width: 2; transition: r .15s; }
+    .guide { stroke: var(--adm-orange); stroke-width: 1; stroke-dasharray: 3 4; opacity: .5; }
     .tip {
       position: absolute; transform: translate(-50%, calc(-100% - 14px)); pointer-events: none;
-      background: #241c22; color: #fff; padding: 8px 12px; border-radius: 10px; font-size: 12px;
+      background: #241f1c; color: #fff; padding: 8px 12px; border-radius: 10px; font-size: 12px;
       white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 1px;
-      box-shadow: 0 10px 24px rgba(36, 28, 34, .22);
+      box-shadow: 0 10px 24px rgba(36, 31, 28, .22);
     }
     .tip::after {
       content: ''; position: absolute; bottom: -5px; left: 50%; width: 10px; height: 10px;
-      background: #241c22; transform: translateX(-50%) rotate(45deg);
+      background: #241f1c; transform: translateX(-50%) rotate(45deg);
     }
     .tip strong { font-size: 13px; font-weight: 600; }
     .tip-label, .tip-hint { opacity: .7; font-size: 11px; }
@@ -209,7 +209,7 @@ export interface DonutSlice {
   color: string;
 }
 
-export const DONUT_COLORS = ['#c2185b', '#e86a9a', '#f4a6c1', '#9c4f6e', '#d66f95', '#b9a3ad', '#7d3c5a', '#f2c4d4'];
+export const DONUT_COLORS = ['#ff6600', '#ffa24d', '#b84a00', '#ffd2a8', '#e0803a', '#c9b5a8', '#7a3300', '#f5b971'];
 
 @Component({
   selector: 'adm-donut-chart',
@@ -251,7 +251,7 @@ export const DONUT_COLORS = ['#c2185b', '#e86a9a', '#f4a6c1', '#9c4f6e', '#d66f9
     .donut-wrap { display: flex; align-items: center; gap: 28px; }
     .donut { position: relative; width: 190px; flex-shrink: 0; aspect-ratio: 1; }
     svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-    .track { fill: none; stroke: #f6eef1; stroke-width: 34; }
+    .track { fill: none; stroke: #f6f1ee; stroke-width: 34; }
     .arc { fill: none; stroke-width: 34; transition: opacity .2s, stroke-width .2s; cursor: pointer; }
     .arc:hover { stroke-width: 38; }
     .arc.dim, li.dim { opacity: .35; }
@@ -259,7 +259,7 @@ export const DONUT_COLORS = ['#c2185b', '#e86a9a', '#f4a6c1', '#9c4f6e', '#d66f9
     .center strong { font-size: 1.05rem; font-weight: 700; color: var(--adm-ink); line-height: 1.2; }
     .center span { font-size: .8rem; color: var(--adm-muted); }
     .legend { list-style: none; margin: 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .legend li { display: flex; align-items: center; gap: 10px; font-size: .85rem; color: #5b5058; transition: opacity .2s; cursor: default; }
+    .legend li { display: flex; align-items: center; gap: 10px; font-size: .85rem; color: #5b5450; transition: opacity .2s; cursor: default; }
     .legend i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .legend .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .legend .pct { font-weight: 600; color: var(--adm-ink); }
@@ -313,8 +313,8 @@ export class AdmDonutChartComponent {
     <svg viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <linearGradient [attr.id]="gid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--adm-pink)" stop-opacity="0.22" />
-          <stop offset="100%" stop-color="var(--adm-pink)" stop-opacity="0" />
+          <stop offset="0%" stop-color="var(--adm-orange)" stop-opacity="0.22" />
+          <stop offset="100%" stop-color="var(--adm-orange)" stop-opacity="0" />
         </linearGradient>
       </defs>
       <path [attr.d]="area" [attr.fill]="fillUrl" />
@@ -324,7 +324,7 @@ export class AdmDonutChartComponent {
   styles: [`
     :host { display: block; width: 100%; height: 100%; }
     svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .line { fill: none; stroke: var(--adm-pink); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+    .line { fill: none; stroke: var(--adm-orange); stroke-width: 1.8; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
   `],
 })
 export class AdmSparklineComponent {

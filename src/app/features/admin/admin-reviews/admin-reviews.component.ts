@@ -141,8 +141,8 @@ interface Review {
     .bars { list-style: none; margin: 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .bars li { display: grid; grid-template-columns: 38px 1fr 30px; align-items: center; gap: 10px; font-size: .8rem; color: var(--adm-text); }
     .bars li span i { color: #f2b33d; font-size: .7rem; }
-    .bar { height: 8px; background: #f5edf1; border-radius: 99px; overflow: hidden; }
-    .bar i { display: block; height: 100%; background: linear-gradient(90deg, #f0a1c0, var(--adm-pink)); border-radius: 99px; transition: width .4s ease; }
+    .bar { height: 8px; background: #f5f0ed; border-radius: 99px; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: linear-gradient(90deg, #fabf97, var(--adm-orange)); border-radius: 99px; transition: width .4s ease; }
     .bars em { font-style: normal; color: var(--adm-muted); text-align: right; }
     .mini { display: grid; gap: 16px; }
     .grow { flex: 1 1 220px; }
@@ -152,7 +152,7 @@ interface Review {
       display: grid; grid-template-columns: 240px minmax(0, 1fr) auto; gap: 20px; align-items: start;
       padding: 18px; border: 1px solid var(--adm-line); border-radius: 14px; background: #fff; transition: border-color .2s, box-shadow .2s;
     }
-    .review:hover { border-color: #f1d3df; box-shadow: 0 8px 22px rgba(42, 33, 40, .05); }
+    .review:hover { border-color: #f5decf; box-shadow: 0 8px 22px rgba(42, 37, 33, .05); }
     .review.pending { background: linear-gradient(90deg, #fffaf0, #fff 40%); border-color: #f7e6c4; }
     .rv-product { display: flex; gap: 12px; align-items: center; min-width: 0; }
     .rv-product strong { display: block; font-size: .85rem; color: var(--adm-ink); margin-bottom: 4px; }

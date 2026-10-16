@@ -242,15 +242,15 @@ const emptyForm = (): CouponForm => ({
     .nowrap { white-space: nowrap; }
     .code {
       font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-weight: 700; font-size: .8rem; letter-spacing: .04em;
-      background: var(--adm-pink-50); color: var(--adm-pink-dark); border: 1px dashed #efbcd0; padding: 4px 10px; border-radius: 8px;
+      background: var(--adm-orange-50); color: var(--adm-orange-dark); border: 1px dashed #f5cfb6; padding: 4px 10px; border-radius: 8px;
     }
     .copy { background: none; color: var(--adm-muted); margin-left: 6px; padding: 4px; border-radius: 6px; }
-    .copy:hover { color: var(--adm-pink); background: var(--adm-pink-50); }
+    .copy:hover { color: var(--adm-orange); background: var(--adm-orange-50); }
     tr.dim td { opacity: .62; }
     tr.dim td.actions { opacity: 1; }
     .uses { display: flex; flex-direction: column; gap: 6px; min-width: 90px; font-size: .82rem; }
-    .bar { height: 6px; border-radius: 99px; background: #f5edf1; overflow: hidden; }
-    .bar i { display: block; height: 100%; background: var(--adm-pink); border-radius: 99px; }
+    .bar { height: 6px; border-radius: 99px; background: #f5f0ed; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--adm-orange); border-radius: 99px; }
     .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
     .first { margin-top: 14px; }
     .tip { display: flex; align-items: center; gap: 16px; padding: 18px 22px; margin-top: 20px; }
@@ -263,7 +263,7 @@ const emptyForm = (): CouponForm => ({
     .mono { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
     .preview {
       margin-top: 24px; display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 14px; color: #fff;
-      background: linear-gradient(135deg, #e87ea6, #b8326a); box-shadow: 0 12px 28px rgba(214, 69, 127, .3);
+      background: linear-gradient(135deg, #f5a671, #e55a00); box-shadow: 0 12px 28px rgba(255, 102, 0, .3);
     }
     .preview i { font-size: 1.6rem; opacity: .85; }
     .preview strong { display: block; font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; font-size: 1.05rem; }
