@@ -4,7 +4,7 @@
   "outputDirectory": "dist/nera-cosmetique-web/browser",
   "rewrites": [
     {
-      "source": "/((?!.*\\.[a-zA-Z0-9]{1,8}$).*)",
+      "source": "/((?!.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ],
