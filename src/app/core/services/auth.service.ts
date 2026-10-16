@@ -55,6 +55,11 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  updateCurrentUser(user: User): void {
+    this.storage.set('user', user);
+    this.currentUserSubject.next(user);
+  }
+
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
