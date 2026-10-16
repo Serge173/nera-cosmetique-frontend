@@ -1,5 +1,5 @@
-// Backend API : port 5000 (ne pas utiliser 3000)
+// Backend API en local (port 5000)
 export const environment = {
   production: false,
-  apiUrl: 'https://nera-backend.onrender.com/api/v1'
+  apiUrl: 'http://localhost:5000/api/v1'
 };

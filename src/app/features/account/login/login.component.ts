@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="login">
+    <div class="login page-section section-cosmetic-pearl">
       <div class="container">
         <div class="login-form">
           <h1>Connexion</h1>
@@ -124,10 +124,19 @@ export class LoginComponent {
     const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/compte';
     this.authService.login(email, password).subscribe({
       next: () => {
+        this.loading = false;
+        this.toast.success('Connexion réussie.');
         this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {
-        this.toast.error(err?.message || 'Email ou mot de passe incorrect');
+        const raw = err?.error?.message || err?.message || 'Email ou mot de passe incorrect';
+        if (raw.includes('Compte désactivé')) {
+          this.toast.error('Votre compte est suspendu pour des raisons de sécurité. Contactez le support.');
+        } else if (raw.toLowerCase().includes('introuvable') || raw.toLowerCase().includes('supprim')) {
+          this.toast.error('Ce compte n\'existe plus. Veuillez contacter le support ou créer un nouveau compte.');
+        } else {
+          this.toast.error(raw);
+        }
         this.loading = false;
       }
     });

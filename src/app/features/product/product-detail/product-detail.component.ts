@@ -7,13 +7,14 @@ import { CartService } from '../../../core/services/cart.service';
 import { Product } from '../../../models/product.model';
 import { PricePipe } from '../../../shared/pipes/price.pipe';
 import { safeProductImageUrl } from '../../../shared/utils/placeholder-image';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
-    <div class="product-detail">
+    <div class="product-detail page-section section-cosmetic-cream">
       <div class="container">
         @if (product) {
           <div class="product-content">
@@ -230,7 +231,8 @@ export class ProductDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private api: ApiService,
-    private cartService: CartService
+    private cartService: CartService,
+    private toast: ToastService,
   ) {}
 
   ngOnInit() {
@@ -258,14 +260,29 @@ export class ProductDetailComponent implements OnInit {
 
   addToCart() {
     if (this.product) {
-      this.cartService.addItem(this.product.id, this.quantity, this.product).subscribe();
+      this.cartService.addItem(this.product.id, this.quantity, this.product).subscribe({
+        next: () => {
+          this.toast.success('Produit ajouté au panier.');
+        },
+        error: (err) => {
+          const msg = err?.error?.message || err?.message || 'Impossible d\'ajouter le produit au panier.';
+          this.toast.error(msg);
+        },
+      });
     }
   }
 
   buyNow() {
     if (this.product) {
-      this.cartService.addItem(this.product.id, this.quantity, this.product).subscribe(() => {
-        this.router.navigate(['/commander']);
+      this.cartService.addItem(this.product.id, this.quantity, this.product).subscribe({
+        next: () => {
+          this.toast.success('Produit ajouté au panier, vous pouvez finaliser votre commande.');
+          this.router.navigate(['/commander']);
+        },
+        error: (err) => {
+          const msg = err?.error?.message || err?.message || 'Impossible d\'ajouter le produit au panier.';
+          this.toast.error(msg);
+        },
       });
     }
   }

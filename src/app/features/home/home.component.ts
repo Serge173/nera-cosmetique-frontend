@@ -66,9 +66,11 @@ interface SlideItem {
         </div>
       </section>
 
-      <section class="featured-products">
+      <section class="featured-products page-section section-cosmetic-rose">
         <div class="container">
-          <h2>Produits en vedette</h2>
+          <span class="section-label-cosmetic">Sélection</span>
+          <h2 class="section-title-cosmetic">Produits en vedette</h2>
+          <p class="section-subtitle-cosmetic">Les incontournables de notre boutique</p>
           <div class="products-grid">
             @for (product of featuredProducts; track product.id) {
               <app-product-card [product]="product"></app-product-card>
@@ -79,30 +81,33 @@ interface SlideItem {
           </div>
         </div>
       </section>
-
-      <section class="new-products">
-        <div class="container">
-          <h2>Nouveautés</h2>
-          <div class="products-grid">
-            @for (product of newProducts; track product.id) {
-              <app-product-card [product]="product"></app-product-card>
-            }
-          </div>
-        </div>
-      </section>
-
-      <section class="newsletter">
-        <div class="container">
-          <h2>Newsletter</h2>
-          <p>Recevez nos offres exclusives</p>
-          <form (ngSubmit)="subscribeNewsletter()" class="newsletter-form">
-            <input type="email" [(ngModel)]="newsletterEmail" name="newsletterEmail" placeholder="Votre email" required />
-            <button type="submit" class="btn btn-primary">S'inscrire</button>
-          </form>
-        </div>
-      </section>
       </div>
     </div>
+
+    <section class="new-products page-section section-cosmetic-cream">
+      <div class="container">
+        <span class="section-label-cosmetic">Nouveautés</span>
+        <h2 class="section-title-cosmetic">Dernières arrivées</h2>
+        <p class="section-subtitle-cosmetic">Découvrez nos nouveautés</p>
+        <div class="products-grid">
+          @for (product of newProducts; track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="newsletter page-section section-cosmetic-gold">
+      <div class="container">
+        <span class="section-label-cosmetic">Newsletter</span>
+        <h2 class="section-title-cosmetic">Recevez nos offres exclusives</h2>
+        <p class="section-subtitle-cosmetic">Inscrivez-vous pour ne rien manquer de nos actualités et promos</p>
+        <form (ngSubmit)="subscribeNewsletter()" class="newsletter-form">
+          <input type="email" [(ngModel)]="newsletterEmail" name="newsletterEmail" placeholder="Votre email" required />
+          <button type="submit" class="btn btn-primary">S'inscrire</button>
+        </form>
+      </div>
+    </section>
   `,
   styles: [`
     .home {
@@ -114,15 +119,17 @@ interface SlideItem {
       flex: 0 0 260px;
       width: 260px;
       min-width: 0;
-      background: #fff;
       border-right: 1px solid var(--border-color);
       position: sticky;
-      top: 0;
-      align-self: start;
-      max-height: 100vh;
+      top: var(--header-height);
+      align-self: flex-start;
+      max-height: calc(100vh - var(--header-height));
       overflow-y: auto;
+      background: linear-gradient(180deg, #ffffff 0%, #fff7f2 100%);
     }
     .sidebar-inner {
+      position: relative;
+      z-index: 1;
       padding: 24px 20px 32px;
     }
     .sidebar-title {
@@ -146,6 +153,7 @@ interface SlideItem {
       text-decoration: none;
       font-size: 0.9375rem;
       font-weight: 500;
+      text-transform: uppercase;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -167,7 +175,7 @@ interface SlideItem {
       position: relative;
       overflow: hidden;
       min-height: 380px;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      background: #050816;
     }
     .slider-track {
       display: flex;
@@ -177,6 +185,7 @@ interface SlideItem {
     .slide {
       flex: 0 0 100%;
       min-height: 380px;
+      padding: 24px 0 52px;
       position: relative;
       display: flex;
       align-items: center;
@@ -188,25 +197,34 @@ interface SlideItem {
       inset: 0;
       background-size: cover;
       background-position: center;
-      opacity: 0.25;
+      background-repeat: no-repeat;
+    }
+    .slide-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0) 100%);
     }
     .slide-content {
       position: relative;
       z-index: 1;
       color: white;
-      padding: 48px 24px;
-      max-width: 720px;
-      width: 100%;
+      padding: 32px 36px;
+      margin: 0 72px;
+      max-width: 640px;
+      background: rgba(10, 10, 20, 0.32);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
     }
     .slide-content h1 {
       font-size: clamp(28px, 5vw, 42px);
       margin-bottom: 16px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      text-shadow: 0 2px 12px rgba(0,0,0,0.45);
     }
     .slide-content p {
       font-size: clamp(16px, 2.5vw, 20px);
       margin-bottom: 24px;
-      opacity: 0.95;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
     }
     .slide-content .btn {
       display: inline-block;
@@ -257,19 +275,30 @@ interface SlideItem {
     .featured-products, .new-products {
       padding: 60px 0;
     }
-    .featured-products h2, .new-products h2 {
+    .featured-products .section-label-cosmetic,
+    .featured-products .section-title-cosmetic,
+    .featured-products .section-subtitle-cosmetic,
+    .new-products .section-label-cosmetic,
+    .new-products .section-title-cosmetic,
+    .new-products .section-subtitle-cosmetic {
       text-align: center;
-      margin-bottom: 40px;
-      color: var(--text-dark);
+      display: block;
     }
+    .featured-products .section-subtitle-cosmetic,
+    .new-products .section-subtitle-cosmetic { margin-bottom: 32px; }
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 24px;
     }
     .newsletter {
-      background: var(--secondary-color);
       padding: 60px 20px;
+      text-align: center;
+    }
+    .newsletter .section-label-cosmetic,
+    .newsletter .section-title-cosmetic,
+    .newsletter .section-subtitle-cosmetic {
+      display: block;
       text-align: center;
     }
     .newsletter-form {
@@ -314,7 +343,8 @@ interface SlideItem {
         min-height: 280px;
       }
       .slide-content {
-        padding: 32px 20px;
+        padding: 24px 20px;
+        margin: 0 60px;
       }
       .slider-btn {
         width: 44px;
@@ -345,6 +375,10 @@ interface SlideItem {
       .hero-slider, .slide {
         min-height: 240px;
       }
+      .slide-content {
+        padding: 18px 16px;
+        margin: 0 52px;
+      }
       .slide-content h1 {
         font-size: 1.5rem;
       }
@@ -367,26 +401,31 @@ export class HomeComponent implements OnInit, OnDestroy {
   private autoPlayInterval: ReturnType<typeof setInterval> | null = null;
   private readonly AUTO_PLAY_MS = 6000;
 
-  slides: SlideItem[] = [
+  readonly defaultSlides: SlideItem[] = [
     {
-      title: 'Bienvenue chez Nera Cosmétique',
-      description: 'Découvrez nos produits cosmétiques importés de France, pour une peau sublimée.',
+      image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2400&q=85',
+      title: 'Bienvenue sur Nera Cosmétique',
+      description: 'Votre boutique beauté, soins et maquillage importés de France pour sublimer toutes les peaux.',
       link: '/boutique',
       linkLabel: 'Découvrir la boutique'
     },
     {
-      title: 'Nouveautés et tendances',
-      description: 'Des soins et maquillages soigneusement sélectionnés pour vous.',
+      image: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=2400&q=85',
+      title: 'Rituels de beauté premium',
+      description: 'Des routines complètes pour le visage et le corps, sélectionnées avec exigence.',
       link: '/boutique',
-      linkLabel: 'Voir les nouveautés'
+      linkLabel: 'Voir nos rituels'
     },
     {
-      title: 'Livraison en Côte d\'Ivoire',
-      description: 'Abidjan et intérieur du pays. Paiement à la livraison ou Mobile Money.',
+      image: 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=2400&q=85',
+      title: 'Livraison rapide en Côte d’Ivoire',
+      description: 'Abidjan et intérieur du pays, paiement à la livraison ou Mobile Money sécurisé.',
       link: '/boutique',
-      linkLabel: 'Commander'
+      linkLabel: 'Commander maintenant'
     }
   ];
+
+  slides: SlideItem[] = [...this.defaultSlides];
 
   constructor(private api: ApiService, private toast: ToastService) {}
 
@@ -394,6 +433,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loadCategories();
     this.loadFeaturedProducts();
     this.loadNewProducts();
+    this.loadSlides();
     this.startAutoPlay();
   }
 
@@ -406,6 +446,36 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopAutoPlay();
+  }
+
+  loadSlides() {
+    this.api.get<any[]>('/slides').subscribe({
+      next: (data) => {
+        const raw = data ?? [];
+        if (raw.length) {
+          const custom = raw.map(s => ({
+            image: s.imageUrl || s.image || '',
+            title: s.title,
+            description: s.description || '',
+            link: s.link || '/boutique',
+            linkLabel: s.linkLabel || 'Découvrir',
+          }));
+          const taken = new Set(custom.map(sl => `${sl.title}|${sl.image}`));
+          const base = this.defaultSlides.filter(d => !taken.has(`${d.title}|${d.image}`));
+          this.slides = [...base, ...custom];
+        } else {
+          this.slides = [...this.defaultSlides];
+        }
+        if (this.slides.length === 0) {
+          this.slides = [...this.defaultSlides];
+        }
+        this.currentSlideIndex = 0;
+        this.resetTimer();
+      },
+      error: () => {
+        this.slides = [...this.defaultSlides];
+      }
+    });
   }
 
   next() {

@@ -11,20 +11,22 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
+  private options = { withCredentials: true as const };
+
   get<T>(endpoint: string, params?: any): Observable<T> {
-    return this.http.get<T>(`${this.apiUrl}${endpoint}`, { params });
+    return this.http.get<T>(`${this.apiUrl}${endpoint}`, { ...this.options, params });
   }
 
   post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.apiUrl}${endpoint}`, body);
+    return this.http.post<T>(`${this.apiUrl}${endpoint}`, body, this.options);
   }
 
   patch<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.patch<T>(`${this.apiUrl}${endpoint}`, body);
+    return this.http.patch<T>(`${this.apiUrl}${endpoint}`, body, this.options);
   }
 
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.apiUrl}${endpoint}`);
+    return this.http.delete<T>(`${this.apiUrl}${endpoint}`, this.options);
   }
 
   /** Upload d’une image (ex. pour un produit). Retourne l’URL publique de l’image. */
@@ -33,8 +35,8 @@ export class ApiService {
     formData.append('file', file);
     const headers = new HttpHeaders();
     const options = accessToken
-      ? { headers: headers.set('Authorization', `Bearer ${accessToken}`) }
-      : {};
+      ? { ...this.options, headers: headers.set('Authorization', `Bearer ${accessToken}`) }
+      : this.options;
     return this.http.post<{ url: string }>(`${this.apiUrl}/admin/upload/image`, formData, options);
   }
 }

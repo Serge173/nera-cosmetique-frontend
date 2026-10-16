@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -14,6 +15,16 @@ import { Subscription } from 'rxjs';
     <header class="header">
       <div class="container">
         <div class="header-content">
+          <button
+            type="button"
+            class="menu-toggle"
+            (click)="toggleMenu()"
+            [attr.aria-expanded]="menuOpen"
+            aria-controls="mobile-drawer"
+            [attr.aria-label]="menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'">
+            <i class="fa-solid" [class.fa-bars]="!menuOpen" [class.fa-xmark]="menuOpen"></i>
+          </button>
+
           <a routerLink="/" class="logo" aria-label="NERA Cosmétique Accueil">
             <img src="assets/logo.png" alt="NERA Cosmétique" />
           </a>
@@ -30,7 +41,7 @@ import { Subscription } from 'rxjs';
               />
               <button type="submit" class="search-btn" aria-label="Lancer la recherche">Rechercher</button>
             </form>
-            <nav class="nav" [class.menu-open]="menuOpen">
+            <nav class="nav">
               <a routerLink="/boutique" routerLinkActive="active">Boutique</a>
               <a routerLink="/a-propos" routerLinkActive="active">À propos</a>
               <a routerLink="/contact" routerLinkActive="active">Contact</a>
@@ -39,7 +50,8 @@ import { Subscription } from 'rxjs';
               }
             </nav>
             <div class="header-actions">
-              <a routerLink="/panier" class="cart-link">
+              <a routerLink="/panier" class="cart-link" aria-label="Panier">
+                <i class="fa-solid fa-bag-shopping cart-icon" aria-hidden="true"></i>
                 <span class="cart-text">Panier</span>
                 @if (itemCount > 0) {
                   <span class="cart-badge">{{ itemCount }}</span>
@@ -47,7 +59,13 @@ import { Subscription } from 'rxjs';
               </a>
               @if (authService.currentUser$ | async; as user) {
                 <div class="profile-wrap">
-                  <button type="button" class="profile-trigger" (click)="toggleProfileMenu()" [attr.aria-expanded]="profileMenuOpen" aria-label="Menu profil" aria-haspopup="true">
+                  <button
+                    type="button"
+                    class="profile-trigger"
+                    (click)="toggleProfileMenu()"
+                    [attr.aria-expanded]="profileMenuOpen"
+                    aria-label="Menu profil"
+                    aria-haspopup="true">
                     <i class="fa-solid fa-circle-user"></i>
                     <span class="profile-name">{{ user.email }}</span>
                   </button>
@@ -57,31 +75,135 @@ import { Subscription } from 'rxjs';
                         <i class="fa-solid fa-user"></i>
                         <span>{{ user.email }}</span>
                       </div>
-                      <a routerLink="/compte" (click)="closeProfileMenu()" role="menuitem"><i class="fa-solid fa-user-pen"></i> Mon compte</a>
-                      <a routerLink="/compte/commandes" (click)="closeProfileMenu()" role="menuitem"><i class="fa-solid fa-box-open"></i> Mes commandes</a>
+                      <a routerLink="/compte" (click)="closeProfileMenu()" role="menuitem">
+                        <i class="fa-solid fa-user-pen"></i> Mon compte
+                      </a>
+                      <a routerLink="/compte/commandes" (click)="closeProfileMenu()" role="menuitem">
+                        <i class="fa-solid fa-box-open"></i> Mes commandes
+                      </a>
                       @if (authService.isAdmin()) {
-                        <a routerLink="/admin" (click)="closeProfileMenu()" role="menuitem"><i class="fa-solid fa-gear"></i> Administration</a>
+                        <a routerLink="/admin" (click)="closeProfileMenu()" role="menuitem">
+                          <i class="fa-solid fa-gear"></i> Administration
+                        </a>
                       }
                       <div class="profile-dropdown-divider"></div>
-                      <button type="button" (click)="confirmLogout()" role="menuitem" class="profile-logout"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+                      <button
+                        type="button"
+                        (click)="confirmLogout()"
+                        role="menuitem"
+                        class="profile-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+                      </button>
                     </div>
                   }
                 </div>
+                @if (authService.isAdmin()) {
+                  <a
+                    routerLink="/admin"
+                    class="console-btn"
+                    aria-label="Accéder à la console d'administration">
+                    Console
+                  </a>
+                }
               }
-              <button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Menu">☰</button>
             </div>
           </div>
         </div>
       </div>
+
+      @if (menuOpen) {
+        <div class="drawer-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
+      }
+      <aside
+        id="mobile-drawer"
+        class="mobile-drawer"
+        [class.open]="menuOpen"
+        [attr.aria-hidden]="!menuOpen"
+        aria-label="Menu principal">
+        <div class="drawer-header">
+          <a routerLink="/" class="drawer-logo" (click)="closeMenu()" aria-label="NERA Cosmétique Accueil">
+            <img src="assets/logo.png" alt="NERA Cosmétique" />
+          </a>
+          <button type="button" class="drawer-close" (click)="closeMenu()" aria-label="Fermer le menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form class="drawer-search" (submit)="onSearch($event)">
+          <input
+            type="search"
+            [(ngModel)]="searchQuery"
+            name="drawerSearch"
+            placeholder="Rechercher un produit…"
+            aria-label="Rechercher un produit par nom"
+          />
+          <button type="submit" aria-label="Lancer la recherche"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+
+        <nav class="drawer-nav">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
+            <i class="fa-solid fa-house"></i> Accueil
+          </a>
+          <a routerLink="/boutique" routerLinkActive="active" (click)="closeMenu()">
+            <i class="fa-solid fa-store"></i> Boutique
+          </a>
+          <a routerLink="/a-propos" routerLinkActive="active" (click)="closeMenu()">
+            <i class="fa-solid fa-circle-info"></i> À propos
+          </a>
+          <a routerLink="/contact" routerLinkActive="active" (click)="closeMenu()">
+            <i class="fa-solid fa-envelope"></i> Contact
+          </a>
+          <a routerLink="/panier" routerLinkActive="active" (click)="closeMenu()">
+            <i class="fa-solid fa-bag-shopping"></i> Panier
+            @if (itemCount > 0) {
+              <span class="drawer-badge">{{ itemCount }}</span>
+            }
+          </a>
+          <div class="drawer-divider"></div>
+          @if (authService.currentUser$ | async) {
+            <a routerLink="/compte" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
+              <i class="fa-solid fa-user-pen"></i> Mon compte
+            </a>
+            <a routerLink="/compte/commandes" routerLinkActive="active" (click)="closeMenu()">
+              <i class="fa-solid fa-box-open"></i> Mes commandes
+            </a>
+            @if (authService.isAdmin()) {
+              <a routerLink="/admin" class="drawer-console" (click)="closeMenu()">
+                <i class="fa-solid fa-gear"></i> Console
+              </a>
+            }
+            <button type="button" class="drawer-logout" (click)="closeMenu(); confirmLogout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+            </button>
+          } @else {
+            <a routerLink="/compte/connexion" routerLinkActive="active" (click)="closeMenu()">
+              <i class="fa-solid fa-right-to-bracket"></i> Connexion
+            </a>
+          }
+        </nav>
+      </aside>
+      @if (logoutConfirmVisible) {
+        <div class="logout-toast" role="dialog" aria-modal="true" aria-label="Confirmation de déconnexion">
+          <p class="logout-message">Voulez-vous vraiment vous déconnecter&nbsp;?</p>
+          <div class="logout-actions">
+            <button type="button" class="btn btn-primary" (click)="performLogout()">Oui, me déconnecter</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelLogout()">Annuler</button>
+          </div>
+        </div>
+      }
     </header>
   `,
   styles: [`
+    :host {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
     .header {
       background: var(--white);
       box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: relative;
     }
     .header-content {
       display: flex;
@@ -197,6 +319,21 @@ import { Subscription } from 'rxjs';
       border-color: var(--primary-color);
       color: var(--primary-color);
     }
+    .console-btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--primary-color);
+      background: #fff;
+      color: var(--primary-color);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .console-btn:hover {
+      background: var(--primary-color);
+      color: #fff;
+    }
     .cart-text {
       white-space: nowrap;
     }
@@ -306,75 +443,237 @@ import { Subscription } from 'rxjs';
       background: rgba(198, 40, 40, 0.08);
       color: #b71c1c;
     }
+    .cart-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-icon {
+      font-size: 1.05rem;
+      color: var(--primary-color);
+    }
     .menu-toggle {
       display: none;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       background: none;
       border: none;
+      border-radius: 10px;
+      color: var(--text-dark);
       cursor: pointer;
-      padding: 8px 12px;
-      line-height: 1;
-      min-width: 44px;
-      min-height: 44px;
+      width: 44px;
+      height: 44px;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
     }
+    .menu-toggle:hover {
+      background: var(--secondary-color);
+      color: var(--primary-color);
+    }
+
+    .drawer-backdrop,
+    .mobile-drawer {
+      display: none;
+    }
+
     @media (max-width: 992px) {
-      .header-search {
-        max-width: 200px;
-      }
-    }
-    @media (max-width: 768px) {
       .header-content {
-        flex-wrap: wrap;
-      }
-      .header-right {
-        order: 2;
-        flex: 1 1 auto;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-      .header-search {
-        display: none;
-      }
-      .nav {
-        position: fixed;
-        top: 70px;
-        left: -100%;
-        width: 100%;
-        max-width: 280px;
-        background: white;
-        flex-direction: column;
-        align-items: stretch;
-        padding: 20px;
-        box-shadow: var(--shadow);
-        transition: left 0.3s;
-        z-index: 101;
-      }
-      .nav.menu-open {
-        left: 0;
-      }
-      .nav a,
-      .nav .nav-btn {
-        padding: 10px 0;
+        gap: 10px;
       }
       .menu-toggle {
-        display: block;
+        display: inline-flex;
+      }
+      .logo {
+        margin-left: auto;
+      }
+      .header-right {
+        flex: 0 0 auto;
+        gap: 8px;
+      }
+      .header-search,
+      .nav,
+      .console-btn {
+        display: none;
+      }
+      .cart-link {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 10px;
+      }
+      .cart-text {
+        display: none;
+      }
+      .cart-icon {
+        font-size: 1.2rem;
       }
       .profile-name {
         display: none;
       }
       .profile-trigger {
-        max-width: none;
-        padding: 8px 10px;
-        min-height: 44px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 10px;
       }
-      .cart-link {
-        min-height: 44px;
-        padding: 8px 12px;
+
+      .drawer-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 15, 25, 0.45);
+        z-index: 1001;
+        animation: drawerFade 0.2s ease;
+      }
+      .mobile-drawer {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(320px, 86vw);
+        background: #fff;
+        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.18);
+        z-index: 1002;
+        transform: translateX(-105%);
+        transition: transform 0.28s ease;
+        overflow-y: auto;
+        visibility: hidden;
+      }
+      .mobile-drawer.open {
+        transform: translateX(0);
+        visibility: visible;
+      }
+      .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .drawer-logo img {
+        height: 42px;
+        width: auto;
+        display: block;
+      }
+      .drawer-close {
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        color: var(--text-dark);
+        font-size: 1.35rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, transform 0.2s;
       }
+      .drawer-close:hover {
+        background: var(--primary-color);
+        color: #fff;
+        transform: rotate(90deg);
+      }
+      .drawer-search {
+        display: flex;
+        gap: 8px;
+        padding: 16px;
+      }
+      .drawer-search input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 0.9375rem;
+      }
+      .drawer-search input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.2);
+      }
+      .drawer-search button {
+        width: 44px;
+        border: none;
+        border-radius: 10px;
+        background: var(--primary-color);
+        color: #fff;
+        cursor: pointer;
+      }
+      .drawer-nav {
+        display: flex;
+        flex-direction: column;
+        padding: 4px 12px 24px;
+      }
+      .drawer-nav a,
+      .drawer-logout {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 12px;
+        border-radius: 10px;
+        color: var(--text-dark);
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .drawer-nav a i,
+      .drawer-logout i {
+        width: 20px;
+        text-align: center;
+        color: var(--primary-color);
+      }
+      .drawer-nav a:hover,
+      .drawer-nav a.active {
+        background: var(--secondary-color);
+        color: var(--primary-color);
+      }
+      .drawer-console {
+        font-weight: 700 !important;
+        color: var(--primary-color) !important;
+      }
+      .drawer-logout,
+      .drawer-logout i {
+        color: #c62828;
+      }
+      .drawer-logout:hover {
+        background: rgba(198, 40, 40, 0.08);
+      }
+      .drawer-badge {
+        margin-left: auto;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 11px;
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .drawer-divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 8px 12px;
+      }
+    }
+    @keyframes drawerFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     @media (max-width: 480px) {
       .header-content {
@@ -383,10 +682,49 @@ import { Subscription } from 'rxjs';
       .logo img {
         height: 38px;
       }
-      .nav {
-        max-width: 100%;
-        padding: 16px;
-      }
+    }
+    .logout-toast {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .logout-toast::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(2px);
+    }
+    .logout-toast > div,
+    .logout-toast-content {
+      position: relative;
+      max-width: 360px;
+      width: 90%;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+      padding: 16px 18px 14px;
+      border: 1px solid rgba(0,0,0,0.06);
+      pointer-events: auto;
+    }
+    .logout-message {
+      margin: 0 0 10px;
+      font-size: 0.9375rem;
+      color: var(--text-dark);
+    }
+    .logout-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .logout-actions .btn {
+      padding: 8px 14px;
+      min-height: 0;
+      font-size: 0.85rem;
     }
   `]
 })
@@ -396,13 +734,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   itemCount = 0;
   searchQuery = '';
   private querySub?: Subscription;
+  private navSub?: Subscription;
   private clickOutsideListener?: (e: Event) => void;
+  logoutConfirmVisible = false;
 
   constructor(
     public authService: AuthService,
     private cartService: CartService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.cartService.getCart().subscribe(cart => {
       this.itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -413,10 +754,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.querySub = this.route.queryParams.subscribe(q => {
       this.searchQuery = (q['q'] ?? '').trim();
     });
+    this.navSub = this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd && this.menuOpen) this.closeMenu();
+    });
   }
 
   ngOnDestroy(): void {
     this.querySub?.unsubscribe();
+    this.navSub?.unsubscribe();
+    document.body.style.overflow = '';
     this.removeClickOutsideListener();
   }
 
@@ -432,7 +778,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   closeProfileMenu(): void {
     this.profileMenuOpen = false;
     this.removeClickOutsideListener();
-    this.menuOpen = false;
+    if (this.menuOpen) this.setMenuOpen(false);
   }
 
   private addClickOutsideListener(): void {
@@ -454,10 +800,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   confirmLogout(): void {
-    if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-      this.closeProfileMenu();
-      this.authService.logout();
-    }
+    this.logoutConfirmVisible = true;
+    this.closeProfileMenu();
+  }
+
+  cancelLogout(): void {
+    this.logoutConfirmVisible = false;
+  }
+
+  performLogout(): void {
+    this.logoutConfirmVisible = false;
+    this.closeProfileMenu();
+    this.authService.logout();
+    this.toast.info('Vous avez été déconnecté.');
+    this.router.navigate(['/']);
   }
 
   onSearch(e: Event): void {
@@ -471,6 +827,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toggleMenu(): void {
-    this.menuOpen = !this.menuOpen;
+    this.setMenuOpen(!this.menuOpen);
+  }
+
+  closeMenu(): void {
+    this.setMenuOpen(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.menuOpen) this.closeMenu();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.menuOpen && window.innerWidth > 992) this.closeMenu();
+  }
+
+  private setMenuOpen(open: boolean): void {
+    this.menuOpen = open;
+    if (open) this.profileMenuOpen = false;
+    document.body.style.overflow = open ? 'hidden' : '';
   }
 }

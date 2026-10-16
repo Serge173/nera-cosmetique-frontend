@@ -31,6 +31,8 @@ export interface OrderItem {
   unitPrice: number;
   totalPrice: number;
   productImageUrl?: string;
+  productShortDescription?: string;
+  productBrandName?: string;
 }
 
 /** Données du formulaire de commande (livraison / paiement) */

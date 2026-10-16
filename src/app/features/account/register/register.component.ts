@@ -10,7 +10,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="register">
+    <div class="register page-section section-cosmetic-pearl">
       <div class="container">
         <div class="register-form">
           <h1>Inscription</h1>
@@ -144,6 +144,8 @@ export class RegisterComponent {
       phone: this.phone?.trim() || undefined
     }).subscribe({
       next: () => {
+        this.loading = false;
+        this.toast.success('Inscription réussie, vous êtes connecté(e).');
         this.router.navigate(['/compte']);
       },
       error: (err) => {

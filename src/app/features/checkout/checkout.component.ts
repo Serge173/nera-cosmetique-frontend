@@ -13,13 +13,15 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
-    <div class="checkout">
+    <div class="checkout page-section section-cosmetic-mint">
       <div class="container">
         @if (orderConfirmed) {
           <div class="confirmation-block">
             <div class="confirmation-icon">✓</div>
             <h1>Commande enregistrée</h1>
-            <p class="confirmation-message">Merci pour votre commande. Nous vous contacterons pour confirmer la livraison.</p>
+            <p class="confirmation-message">
+              VOTRE COMMANDE SERA LIVRÉE DANS 48H, NOTRE SERVICE CLIENT VA VOUS CONTACTER.
+            </p>
             <p class="order-number">Numéro de commande : <strong>{{ confirmedOrderNumber }}</strong></p>
             <div class="confirmation-actions">
               <a routerLink="/boutique" class="btn btn-primary">Continuer mes achats</a>
@@ -27,8 +29,9 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
             </div>
           </div>
         } @else {
-        <h1>Commander</h1>
-        <p class="checkout-intro">Vous pouvez passer commande avec ou sans compte. Renseignez vos coordonnées ci-dessous.</p>
+        <span class="section-label-cosmetic">Commande</span>
+        <h1 class="section-title-cosmetic">Commander</h1>
+        <p class="checkout-intro section-subtitle-cosmetic">Renseignez vos coordonnées et le mode de livraison ci-dessous.</p>
         <div class="checkout-content">
           <form (ngSubmit)="submitOrder()" class="checkout-form">
             <h2>Informations de livraison</h2>
@@ -63,31 +66,31 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
             <div class="form-group">
               <label>
                 <input type="radio" [(ngModel)]="orderData.deliveryMethod" name="delivery" value="abidjan" />
-                Abidjan - 2 000 FCFA
+                Livraison à domicile en moins de 48h - 1 500 FCFA
               </label>
               <label>
                 <input type="radio" [(ngModel)]="orderData.deliveryMethod" name="delivery" value="interior" />
-                Intérieur pays - 5 000 FCFA
+                Expédition (paiement avant expédition) - 3 000 FCFA
               </label>
             </div>
 
             <h2>Mode de paiement</h2>
             <div class="form-group">
               <label>
-                <input type="radio" [(ngModel)]="orderData.paymentMethod" name="payment" value="mtn_momo" />
-                Mobile Money MTN
+                <input type="radio" name="payment" value="mtn_momo" disabled />
+                ⛔ Mobile Money MTN
               </label>
               <label>
-                <input type="radio" [(ngModel)]="orderData.paymentMethod" name="payment" value="orange_money" />
-                Orange Money
+                <input type="radio" name="payment" value="orange_money" disabled />
+                ⛔ Orange Money
               </label>
               <label>
-                <input type="radio" [(ngModel)]="orderData.paymentMethod" name="payment" value="moov" />
-                Moov Money
+                <input type="radio" name="payment" value="moov" disabled />
+                ⛔ Moov Money
               </label>
               <label>
-                <input type="radio" [(ngModel)]="orderData.paymentMethod" name="payment" value="card" />
-                Carte bancaire
+                <input type="radio" name="payment" value="card" disabled />
+                ⛔ Carte bancaire
               </label>
               <label>
                 <input type="radio" [(ngModel)]="orderData.paymentMethod" name="payment" value="cash_on_delivery" />
@@ -168,12 +171,16 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
     }
     .checkout-content {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 32px;
+      grid-template-columns: 3fr 2fr;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .checkout-content > * {
+      min-width: 0;
     }
     .checkout-form {
       background: white;
-      padding: 32px;
+      padding: 20px 18px;
       border-radius: 8px;
     }
     .form-row {
@@ -182,7 +189,7 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
       gap: 16px;
     }
     .form-group {
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
     .form-group label {
       display: block;
@@ -206,11 +213,13 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
       border-radius: 8px;
       height: fit-content;
       position: sticky;
-      top: 100px;
+      top: calc(var(--header-height) + 16px);
     }
     .summary-item {
       display: flex;
       justify-content: space-between;
+      gap: 12px;
+      overflow-wrap: anywhere;
       padding: 8px 0;
       border-bottom: 1px solid var(--border-color);
     }
@@ -243,6 +252,10 @@ import { PricePipe } from '../../shared/pipes/price.pipe';
       }
     }
     @media (max-width: 480px) {
+      .checkout-form,
+      .checkout-summary {
+        padding: 16px;
+      }
       .confirmation-block {
         margin: 24px auto;
         padding: 32px 20px;
@@ -273,7 +286,7 @@ export class CheckoutComponent implements OnInit {
     addressLine1: '',
     city: '',
     deliveryMethod: '',
-    paymentMethod: ''
+    paymentMethod: 'cash_on_delivery'
   };
   submitting = false;
   orderConfirmed = false;
@@ -293,8 +306,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   get shippingCost(): number {
-    return this.orderData.deliveryMethod === 'abidjan' ? 2000 : 
-           this.orderData.deliveryMethod === 'interior' ? 5000 : 0;
+    return this.orderData.deliveryMethod === 'abidjan' ? 1500 :
+           this.orderData.deliveryMethod === 'interior' ? 3000 : 0;
   }
 
   get total(): number {
@@ -328,6 +341,9 @@ export class CheckoutComponent implements OnInit {
         this.cartService.clearCart();
         this.confirmedOrderNumber = created.orderNumber;
         this.orderConfirmed = true;
+        this.toast.success(
+          `Commande ${created.orderNumber} enregistrée avec succès. Votre commande sera livrée dans 48h, notre service client va vous contacter.`
+        );
       },
       error: (err) => {
         console.error(err);

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../core/services/cart.service';
 import { PricePipe } from '../../shared/pipes/price.pipe';
 import { safeThumbImageUrl } from '../../shared/utils/placeholder-image';
+import { ToastService } from '../../core/services/toast.service';
 
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect fill="%23eee" width="80" height="80"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="10">Image</text></svg>');
 
@@ -13,9 +14,11 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
-    <div class="cart">
+    <div class="cart page-section section-cosmetic-pearl">
       <div class="container">
-        <h1>Mon panier</h1>
+        <span class="section-label-cosmetic">Panier</span>
+        <h1 class="section-title-cosmetic">Mon panier</h1>
+        <p class="section-subtitle-cosmetic">Vérifiez vos articles avant de commander</p>
         @if (cart.items.length === 0) {
           <div class="empty-cart">
             <p>Votre panier est vide</p>
@@ -86,7 +89,7 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
   `,
   styles: [`
     .cart {
-      padding: 32px 0;
+      padding: 0;
     }
     .empty-cart {
       text-align: center;
@@ -145,7 +148,7 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
       border-radius: 8px;
       height: fit-content;
       position: sticky;
-      top: 100px;
+      top: calc(var(--header-height) + 16px);
     }
     .coupon-section {
       display: flex;
@@ -248,7 +251,8 @@ export class CartComponent implements OnInit {
 
   constructor(
     private cartService: CartService,
-    private router: Router
+    private router: Router,
+    private toast: ToastService,
   ) {}
 
   getItemImage(item: CartItem): string {
@@ -268,6 +272,7 @@ export class CartComponent implements OnInit {
 
   removeItem(item: CartItem) {
     this.cartService.removeItem(item);
+    this.toast.info('Article retiré du panier.');
   }
 
   couponMessage = '';
@@ -280,16 +285,23 @@ export class CartComponent implements OnInit {
         next: (res) => {
           this.couponMessage = res.message;
           this.couponSuccess = res.success;
+          if (res.success) {
+            this.toast.success('Code promo appliqué.');
+          } else {
+            this.toast.error(res.message || 'Code promo invalide.');
+          }
         },
         error: (err) => {
           this.couponMessage = err.error?.message || 'Erreur lors de l\'application du code';
           this.couponSuccess = false;
+          this.toast.error(this.couponMessage);
         },
       });
     }
   }
 
   goToCheckout() {
+    this.toast.info('Redirection vers la validation de la commande.');
     this.router.navigate(['/commander']);
   }
 }

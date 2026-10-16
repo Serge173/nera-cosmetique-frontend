@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,20 +19,11 @@ interface Category {
 @Component({
   selector: 'app-admin-categories',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="admin-layout">
       <div class="container admin-layout-inner">
-        <aside class="admin-sidebar">
-          <div class="sidebar-logo">Nera Admin</div>
-          <nav class="sidebar-menu">
-            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
-            <a routerLink="/admin/categories" routerLinkActive="active">Catégories</a>
-            <a routerLink="/admin/orders" routerLinkActive="active">Commandes</a>
-            <a routerLink="/admin/products" routerLinkActive="active">Produits</a>
-            <a routerLink="/admin/users" routerLinkActive="active">Utilisateurs</a>
-          </nav>
-        </aside>
+        <app-admin-sidebar></app-admin-sidebar>
         <main class="admin-main">
           <h1>Gestion des catégories</h1>
 
@@ -123,33 +115,6 @@ interface Category {
       display: flex;
       align-items: flex-start;
       gap: 24px;
-    }
-    .admin-sidebar {
-      width: 240px;
-      background: var(--white);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 24px 16px;
-      position: sticky;
-      top: 90px;
-      align-self: flex-start;
-    }
-    .sidebar-logo {
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--primary-color);
-      margin-bottom: 16px;
-    }
-    .sidebar-menu { display: flex; flex-direction: column; gap: 8px; }
-    .sidebar-menu a {
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: var(--text-dark);
-      font-size: 14px;
-    }
-    .sidebar-menu a.active {
-      background: var(--primary-color);
-      color: var(--white);
     }
     .admin-main { flex: 1; }
     .form-panel {
@@ -259,6 +224,7 @@ export class AdminCategoriesComponent implements OnInit {
         next: () => {
           this.loadCategories();
           this.cancelEdit();
+          this.toast.success('Catégorie mise à jour.');
           this.saving = false;
         },
         error: (err) => {
@@ -271,6 +237,7 @@ export class AdminCategoriesComponent implements OnInit {
         next: () => {
           this.categoryForm = { name: '', parentId: null, description: '' };
           this.loadCategories();
+          this.toast.success('Catégorie créée.');
           this.saving = false;
         },
         error: (err) => {
@@ -302,6 +269,7 @@ export class AdminCategoriesComponent implements OnInit {
       next: () => {
         this.loadCategories();
         this.togglingId = null;
+        this.toast.info(`Catégorie ${newActive ? 'activée' : 'désactivée'}.`);
       },
       error: (err) => {
         this.toast.error(err?.error?.message || 'Impossible de modifier le statut');
@@ -320,6 +288,7 @@ export class AdminCategoriesComponent implements OnInit {
         this.loadCategories();
         this.deletingId = null;
         if (this.editingCategory?.id === cat.id) this.cancelEdit();
+        this.toast.success('Catégorie supprimée.');
       },
       error: (err) => {
         this.toast.error(err?.error?.message || 'Impossible de supprimer');

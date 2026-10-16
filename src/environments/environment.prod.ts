@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://nera-cosmetique-api.onrender.com/api/v1'
+  apiUrl: 'https://nera-cosmetique-api.vercel.app/api/v1'
 };

@@ -10,7 +10,7 @@ import { PricePipe } from '../../../shared/pipes/price.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, PricePipe, DatePipe],
   template: `
-    <div class="order-detail">
+    <div class="order-detail page-section section-cosmetic-cream">
       <div class="container">
         <nav class="account-nav">
           <a routerLink="/compte">Profil</a>
@@ -21,7 +21,7 @@ import { PricePipe } from '../../../shared/pipes/price.pipe';
         } @else if (order) {
           <div class="detail-card">
             <h1>Commande {{ order.orderNumber }}</h1>
-            <p class="order-date">Passée le {{ order.createdAt | date:'longDate' }}</p>
+            <p class="order-date">Passée le {{ order.createdAt | date:'longDate':'GMT' }}</p>
             <span class="order-status" [class]="'status-' + order.status">
               {{ getStatusLabel(order.status) }}
             </span>
@@ -43,8 +43,16 @@ import { PricePipe } from '../../../shared/pipes/price.pipe';
               <div class="items-list">
                 @for (item of order.items; track item.id) {
                   <div class="item-row">
-                    <span>{{ item.productName }} × {{ item.quantity }}</span>
-                    <span>{{ item.totalPrice | price }}</span>
+                    <div class="item-info">
+                      <span class="item-name">{{ item.productName }} × {{ item.quantity }}</span>
+                      @if (item.productBrandName) {
+                        <span class="item-meta">Marque: {{ item.productBrandName }}</span>
+                      }
+                      @if (item.productShortDescription) {
+                        <span class="item-desc">{{ item.productShortDescription }}</span>
+                      }
+                    </div>
+                    <span class="item-price">{{ item.totalPrice | price }}</span>
                   </div>
                 }
               </div>
@@ -115,10 +123,17 @@ import { PricePipe } from '../../../shared/pipes/price.pipe';
     .item-row {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
       padding: 12px 16px;
       border-bottom: 1px solid var(--border-color);
     }
     .item-row:last-child { border-bottom: none; }
+    .item-info { display: flex; flex-direction: column; gap: 2px; }
+    .item-name { font-weight: 600; }
+    .item-meta { font-size: 12px; color: var(--text-light); }
+    .item-desc { font-size: 12px; color: var(--text-dark); margin-top: 4px; }
+    .item-price { font-weight: 600; white-space: nowrap; }
     .totals .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
     .totals .row.total { font-size: 18px; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border-color); }
     .totals .row.discount { color: var(--success); }

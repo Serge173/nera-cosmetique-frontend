@@ -13,9 +13,9 @@ import { CategoryWithCount } from '../../models/product.model';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent],
   template: `
-    <div class="shop">
-      <!-- En-tête de page -->
-      <header class="shop-hero">
+    <div class="shop page-section section-cosmetic-lavender">
+      <header class="shop-hero shop-hero-cosmetic">
+        <div class="shop-hero-bg" aria-hidden="true"></div>
         <div class="container">
           <nav class="breadcrumb" aria-label="Fil d'Ariane">
             <a routerLink="/">Accueil</a>
@@ -28,7 +28,9 @@ import { CategoryWithCount } from '../../models/product.model';
               <span class="current">Boutique</span>
             }
           </nav>
-          <h1 class="shop-title">{{ selectedCategoryName || 'Boutique' }}</h1>
+          <h1 class="shop-title">
+            {{ selectedCategoryName || 'BIENVENUE SUR LA BOUTIQUE NERACOSMETIQUE' }}
+          </h1>
           <p class="shop-subtitle">
             {{ selectedCategoryName ? 'Découvrez nos produits dans cette catégorie.' : 'Découvrez notre sélection de soins et cosmétiques.' }}
           </p>
@@ -237,11 +239,47 @@ import { CategoryWithCount } from '../../models/product.model';
       padding-bottom: 48px;
     }
 
-    .shop-hero {
-      background: linear-gradient(135deg, var(--secondary-color) 0%, #fff 100%);
-      padding: 32px 0 40px;
+    .shop-hero-cosmetic {
+      background: linear-gradient(135deg, var(--cosmetic-cream) 0%, var(--cosmetic-rose) 50%, var(--white) 100%);
+      padding: 40px 0 48px;
       margin-bottom: 32px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(255, 102, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .shop-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      animation: shopHeroSlideshow 18s ease-in-out infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .shop-hero-cosmetic::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(90deg, rgba(255, 250, 247, 0.94) 0%, rgba(255, 250, 247, 0.78) 45%, rgba(255, 250, 247, 0.1) 100%);
+      pointer-events: none;
+    }
+    .shop-hero-cosmetic .container { position: relative; z-index: 2; }
+
+    @keyframes shopHeroSlideshow {
+      0%, 30% {
+        background-image: url('https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2400&q=85');
+      }
+      33%, 63% {
+        background-image: url('https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=2400&q=85');
+      }
+      66%, 96% {
+        background-image: url('https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=2400&q=85');
+      }
+      100% {
+        background-image: url('https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2400&q=85');
+      }
     }
 
     .breadcrumb {
@@ -266,6 +304,7 @@ import { CategoryWithCount } from '../../models/product.model';
     .breadcrumb .current {
       color: var(--text-dark);
       font-weight: 500;
+      text-transform: uppercase;
     }
 
     .shop-title {
@@ -365,7 +404,7 @@ import { CategoryWithCount } from '../../models/product.model';
 
     .filters-panel {
       position: sticky;
-      top: 24px;
+      top: calc(var(--header-height) + 16px);
     }
 
     .filters-panel-inner {

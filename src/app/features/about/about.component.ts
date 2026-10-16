@@ -18,10 +18,10 @@ import { RouterModule } from '@angular/router';
         </div>
       </header>
 
-      <!-- Notre histoire -->
+      <!-- Notre histoire + visuel boutique -->
       <section class="about-section about-section--light">
         <div class="container">
-          <div class="about-section-inner">
+          <div class="about-section-inner about-section-inner--with-image">
             <div class="about-section-content">
               <span class="about-section-label">Qui sommes-nous</span>
               <h2 class="about-section-title">Une passion devenue projet</h2>
@@ -35,10 +35,10 @@ import { RouterModule } from '@angular/router';
                 Aujourd'hui, Nera Cosmétique s'impose comme un partenaire de confiance pour prendre soin de sa peau et de son bien-être au quotidien, partout en Côte d'Ivoire.
               </p>
             </div>
-            <div class="about-section-visual" aria-hidden="true">
-              <div class="about-visual-card">
-                <span class="about-visual-icon">✦</span>
-                <span class="about-visual-text">Import France</span>
+            <div class="about-section-visual">
+              <div class="about-image-wrap">
+                <img src="/assets/images/im2.jpeg" alt="Sélection de produits cosmétiques Nera Cosmétique – soins et marques françaises" width="600" height="400" loading="lazy" />
+                <span class="about-image-badge">Import France</span>
               </div>
             </div>
           </div>
@@ -130,20 +130,18 @@ import { RouterModule } from '@angular/router';
     .about-hero-bg {
       position: absolute;
       inset: 0;
-      background: linear-gradient(160deg, var(--secondary-color) 0%, #fff 45%, rgba(255, 245, 240, 0.6) 100%);
+      background: url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=2400&q=85');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       z-index: 0;
     }
 
     .about-hero-bg::before {
       content: '';
       position: absolute;
-      top: -20%;
-      right: -10%;
-      width: 50%;
-      max-width: 400px;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 102, 0, 0.08) 0%, transparent 70%);
+      inset: 0;
+      background: linear-gradient(90deg, rgba(255, 250, 247, 0.95) 0%, rgba(255, 250, 247, 0.8) 45%, rgba(255, 250, 247, 0.12) 100%);
       pointer-events: none;
     }
 
@@ -182,11 +180,11 @@ import { RouterModule } from '@angular/router';
     }
 
     .about-section--light {
-      background: #fff;
+      background: linear-gradient(180deg, var(--cosmetic-pearl) 0%, #fff 100%);
     }
 
     .about-section--accent {
-      background: linear-gradient(180deg, var(--secondary-color) 0%, #fff 100%);
+      background: linear-gradient(180deg, var(--cosmetic-rose) 0%, var(--cosmetic-cream) 50%, #fff 100%);
     }
 
     .about-section-inner {
@@ -251,31 +249,42 @@ import { RouterModule } from '@angular/router';
       align-items: center;
     }
 
-    .about-visual-card {
-      width: 200px;
-      height: 200px;
+    .about-image-wrap {
+      position: relative;
       border-radius: 24px;
-      background: linear-gradient(145deg, var(--secondary-color) 0%, #fff 100%);
+      overflow: hidden;
       border: 1px solid rgba(255, 102, 0, 0.12);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      box-shadow: 0 12px 40px rgba(255, 102, 0, 0.08);
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.1), 0 12px 24px rgba(255, 102, 0, 0.06);
+      max-width: 520px;
+      aspect-ratio: 4 / 3;
     }
 
-    .about-visual-icon {
-      font-size: 2.5rem;
-      color: var(--primary-color);
-      opacity: 0.9;
+    .about-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
     }
 
-    .about-visual-text {
-      font-size: 0.875rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+    .about-image-wrap:hover img {
+      transform: scale(1.03);
+    }
+
+    .about-image-badge {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
       color: var(--primary-color);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      z-index: 2;
     }
 
     .about-mission-grid {
@@ -411,9 +420,16 @@ import { RouterModule } from '@angular/router';
         order: -1;
       }
 
-      .about-visual-card {
-        width: 160px;
-        height: 160px;
+      .about-image-wrap {
+        max-width: 100%;
+        aspect-ratio: 16 / 11;
+      }
+
+      .about-image-badge {
+        bottom: 14px;
+        right: 14px;
+        padding: 8px 14px;
+        font-size: 0.75rem;
       }
 
       .about-section {

@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="legal">
+    <div class="legal page-section section-cosmetic-pearl">
       <div class="container">
         <h1>Conditions générales de vente</h1>
         <div class="legal-content">

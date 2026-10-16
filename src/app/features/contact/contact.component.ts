@@ -21,7 +21,7 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
       </header>
 
-      <div class="contact-body">
+      <div class="contact-body page-section section-cosmetic-mint">
         <div class="container">
           <div class="contact-grid">
             <!-- Formulaire -->
@@ -94,7 +94,7 @@ import { ToastService } from '../../core/services/toast.service';
               </div>
             </section>
 
-            <!-- Infos & CTA -->
+            <!-- Infos & Carte -->
             <aside class="contact-sidebar">
               <div class="contact-info-card">
                 <h3 class="contact-info-title">Coordonnées</h3>
@@ -104,22 +104,29 @@ import { ToastService } from '../../core/services/toast.service';
                     <span class="contact-info-icon" aria-hidden="true">✉</span>
                     <div>
                       <span class="contact-info-label">Email</span>
-                      <a href="mailto:contact&#64;neracosmetique.ci" class="contact-info-value">contact&#64;neracosmetique.ci</a>
+                      <a href="mailto:skeayeni&#64;gmail.com" class="contact-info-value">skeayeni&#64;gmail.com</a>
                     </div>
                   </li>
                   <li>
                     <span class="contact-info-icon" aria-hidden="true">📱</span>
                     <div>
                       <span class="contact-info-label">WhatsApp</span>
-                      <a href="https://wa.me/2250700000000" target="_blank" rel="noopener noreferrer" class="contact-info-value">+225 07 00 00 00 00</a>
+                      <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" class="contact-info-value">+225 07 89 68 44 67</a>
                     </div>
                   </li>
                 </ul>
               </div>
-              <div class="contact-extra-card">
-                <div class="contact-extra-icon" aria-hidden="true">✦</div>
-                <p class="contact-extra-text">Vous préférez passer commande directement ? Découvrez notre boutique en ligne.</p>
-                <a routerLink="/boutique" class="btn btn-outline btn-block">Voir la boutique</a>
+              <div class="contact-map-card">
+                <h3 class="contact-info-title">Localisation</h3>
+                <p class="contact-info-desc">Retrouvez notre point de vente sur la carte.</p>
+                <div class="contact-map-frame" aria-label="Carte Google Maps de la localisation Nera Cosmétique">
+                  <iframe
+                    title="Localisation Nera Cosmétique"
+                    src="https://www.google.com/maps?q=Abidjan,+C%C3%B4te+d'Ivoire&output=embed"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                  </iframe>
+                </div>
               </div>
             </aside>
           </div>
@@ -141,7 +148,18 @@ import { ToastService } from '../../core/services/toast.service';
     .contact-hero-bg {
       position: absolute;
       inset: 0;
-      background: linear-gradient(155deg, var(--secondary-color) 0%, #fff 50%, rgba(255, 245, 240, 0.5) 100%);
+      background: url('https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=2400&q=85');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
+    }
+
+    .contact-hero-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(90deg, rgba(255, 250, 247, 0.95) 0%, rgba(255, 250, 247, 0.8) 45%, rgba(255, 250, 247, 0.12) 100%);
       z-index: 0;
     }
 
@@ -199,12 +217,29 @@ import { ToastService } from '../../core/services/toast.service';
       align-items: start;
     }
 
+    .contact-form-section {
+      position: relative;
+      z-index: 0;
+    }
+
+    .contact-form-section::before {
+      content: '';
+      position: absolute;
+      inset: -16px;
+      border-radius: 28px;
+      background: url('https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1800&q=85');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -1;
+    }
+
     .contact-form-card {
-      background: #fff;
+      background: rgba(255, 255, 255, 0.84);
       border-radius: 20px;
       padding: 40px 40px 44px;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
     }
 
     .contact-form-title {
@@ -362,32 +397,27 @@ import { ToastService } from '../../core/services/toast.service';
       text-decoration: underline;
     }
 
-    .contact-extra-card {
+    .contact-map-card {
       background: #fff;
       border: 1px solid var(--border-color);
       border-radius: 20px;
-      padding: 28px 24px;
-      text-align: center;
+      padding: 24px 20px 20px;
       box-shadow: var(--shadow);
     }
 
-    .contact-extra-icon {
-      font-size: 2rem;
-      color: var(--primary-color);
-      margin-bottom: 12px;
-      opacity: 0.9;
+    .contact-map-frame {
+      margin-top: 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 4 / 3;
+      background: #f3f4f6;
     }
 
-    .contact-extra-text {
-      font-size: 0.9375rem;
-      color: var(--text-light);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    .btn-block {
+    .contact-map-frame iframe {
+      border: 0;
       width: 100%;
-      text-align: center;
+      height: 100%;
     }
 
     @media (max-width: 900px) {

@@ -27,9 +27,16 @@ import { RouterModule } from '@angular/router';
             <a routerLink="/retours">Retours</a>
             <a routerLink="/mentions-legales">Mentions légales</a>
           </div>
-          <div class="footer-section">
-            <h4>Contact</h4>
-            <p>contact&#64;neracosmetique.ci</p>
+          <div class="footer-section footer-map">
+            <h4>Localisation</h4>
+            <div class="footer-map-frame" aria-label="Carte Google Maps de la localisation Nera Cosmétique">
+              <iframe
+                title="Localisation Nera Cosmétique"
+                src="https://www.google.com/maps?q=Abidjan,+C%C3%B4te+d'Ivoire&output=embed"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
           </div>
           <div class="footer-section footer-social">
             <h4>Réseaux sociaux</h4>
@@ -39,7 +46,7 @@ import { RouterModule } from '@angular/router';
               <a href="https://www.instagram.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i><span>Instagram</span></a>
               <a href="https://twitter.com/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i><span>Twitter</span></a>
               <a href="https://www.snapchat.com/add/neracosmetique" target="_blank" rel="noopener noreferrer" aria-label="Snapchat"><i class="fa-brands fa-snapchat"></i><span>Snapchat</span></a>
-              <a href="https://wa.me/2250700000000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="whatsapp-link"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></a>
+              <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="whatsapp-link"><i class="fa-brands fa-whatsapp"></i><span>WhatsApp</span></a>
             </div>
           </div>
         </div>
@@ -47,7 +54,7 @@ import { RouterModule } from '@angular/router';
           <p>&copy; {{ currentYear }} Nera Cosmétique. Tous droits réservés.</p>
         </div>
       </div>
-      <a href="https://wa.me/2250700000000" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="WhatsApp">
+      <a href="https://wa.me/2250789684467" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="WhatsApp">
         <i class="fa-brands fa-whatsapp"></i>
       </a>
     </footer>
@@ -100,6 +107,17 @@ import { RouterModule } from '@angular/router';
     }
     .whatsapp-link:hover {
       color: #2eff7a;
+    }
+    .footer-map-frame {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #222;
+      aspect-ratio: 4 / 3;
+    }
+    .footer-map-frame iframe {
+      border: 0;
+      width: 100%;
+      height: 100%;
     }
     .footer-bottom {
       text-align: center;

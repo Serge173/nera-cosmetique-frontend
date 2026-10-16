@@ -9,7 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="forgot-password">
+    <div class="forgot-password page-section section-cosmetic-pearl">
       <div class="container">
         <div class="form-box">
           <h1>Mot de passe oublié</h1>

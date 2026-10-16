@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="profile">
+    <div class="profile page-section section-cosmetic-cream">
       <div class="container">
         <h1>Mon compte</h1>
         @if (user) {
@@ -261,7 +261,32 @@ export class ProfileComponent implements OnInit {
   }
 
   updateProfile(): void {
-    this.toast.error('La mise à jour du profil n’est pas encore disponible.');
+    if (!this.user) {
+      return;
+    }
+    const payload = {
+      firstName: this.user.firstName?.trim() || '',
+      lastName: this.user.lastName?.trim() || '',
+      phone: this.user.phone?.trim() || null,
+    };
+    this.api.patch<User>('/users/me', payload).subscribe({
+      next: (updated) => {
+        // Met à jour le user courant dans AuthService / stockage
+        const current = this.authService.getCurrentUser();
+        const merged: User = {
+          ...(current || { id: updated.id, email: updated.email, role: updated.role }),
+          ...updated,
+        };
+        // Mise à jour manuelle du storage et du BehaviorSubject
+        (this.authService as any)['storage'].set('user', merged);
+        (this.authService as any)['currentUserSubject'].next(merged);
+        this.toast.success('Profil mis à jour.');
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? err?.message ?? 'Impossible de mettre à jour le profil.';
+        this.toast.error(msg);
+      },
+    });
   }
 
   changePassword(): void {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -14,24 +15,43 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, PricePipe],
+  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
     <div class="admin-layout">
       <div class="container admin-layout-inner">
-        <aside class="admin-sidebar">
-          <div class="sidebar-logo">Nera Admin</div>
-          <nav class="sidebar-menu">
-            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
-            <a routerLink="/admin/categories" routerLinkActive="active">Catégories</a>
-            <a routerLink="/admin/orders" routerLinkActive="active">Commandes</a>
-            <a routerLink="/admin/products" routerLinkActive="active">Produits</a>
-            <a routerLink="/admin/users" routerLinkActive="active">Utilisateurs</a>
-          </nav>
-        </aside>
+        <app-admin-sidebar></app-admin-sidebar>
         <main class="admin-main">
           <div class="admin-header">
-            <h1>Gestion des produits</h1>
+            <div>
+              <h1>Gestion des produits</h1>
+              <p class="admin-subtitle">
+                @if (activeCategoryId === 'all') {
+                  Tous les produits
+                } @else {
+                  Catégorie : {{ activeCategoryName || '...' }}
+                }
+              </p>
+            </div>
             <button type="button" class="btn btn-primary" (click)="showForm = true">+ Ajouter un produit</button>
+          </div>
+
+          <div class="category-filter">
+            <button
+              type="button"
+              class="pill"
+              [class.active]="activeCategoryId === 'all'"
+              (click)="selectCategory('all')">
+              Toutes les catégories
+            </button>
+            @for (cat of categories; track cat.id) {
+              <button
+                type="button"
+                class="pill"
+                [class.active]="activeCategoryId === cat.id"
+                (click)="selectCategory(cat.id)">
+                {{ cat.name }}
+              </button>
+            }
           </div>
 
         @if (showForm) {
@@ -129,10 +149,10 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
             <tbody>
               @if (loading) {
                 <tr><td colspan="8">Chargement...</td></tr>
-              } @else if (products.length === 0) {
-                <tr><td colspan="8">Aucun produit. Cliquez sur "Ajouter un produit".</td></tr>
+              } @else if (filteredProducts.length === 0) {
+                <tr><td colspan="8">Aucun produit pour cette catégorie. Cliquez sur "Ajouter un produit".</td></tr>
               } @else {
-                @for (p of products; track p.id) {
+                @for (p of filteredProducts; track p.id) {
                   <tr>
                     <td>
                       <img [src]="getProductImage(p)" [alt]="p.name" class="thumb" />
@@ -166,45 +186,39 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
       align-items: flex-start;
       gap: 24px;
     }
-    .admin-sidebar {
-      width: 240px;
-      background: var(--white);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 24px 16px;
-      position: sticky;
-      top: 90px;
-      align-self: flex-start;
-    }
-    .sidebar-logo {
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--primary-color);
-      margin-bottom: 16px;
-    }
-    .sidebar-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .sidebar-menu a {
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: var(--text-dark);
-      font-size: 14px;
-    }
-    .sidebar-menu a.active {
-      background: var(--primary-color);
-      color: var(--white);
-    }
     .admin-main {
       flex: 1;
     }
     .admin-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      gap: 16px;
+    }
+    .admin-subtitle {
+      margin-top: 4px;
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .category-filter .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      font-size: 0.8125rem;
+      cursor: pointer;
+    }
+    .category-filter .pill.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: #fff;
     }
     .form-panel {
       background: white;
@@ -326,6 +340,7 @@ export class AdminProductsComponent implements OnInit {
   uploadingImage = false;
   showForm = false;
   editingProduct: Product | null = null;
+  activeCategoryId: 'all' | number = 'all';
 
   form = {
     name: '',
@@ -341,9 +356,19 @@ export class AdminProductsComponent implements OnInit {
     isNew: false
   };
 
-  constructor(private api: ApiService, private authService: AuthService, private toast: ToastService) {}
+  constructor(
+    private api: ApiService,
+    private authService: AuthService,
+    private toast: ToastService,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   ngOnInit() {
+    const initialCategory = this.route.snapshot.queryParams['category'];
+    if (initialCategory && !Number.isNaN(Number(initialCategory))) {
+      this.activeCategoryId = Number(initialCategory);
+    }
     this.loadProducts();
     this.loadCategories();
     this.loadBrands();
@@ -400,6 +425,27 @@ export class AdminProductsComponent implements OnInit {
     if (p.category?.name) return p.category.name;
     const cat = this.categories.find(c => c.id === p.categoryId);
     return cat?.name ?? '-';
+  }
+
+  get filteredProducts(): Product[] {
+    if (this.activeCategoryId === 'all') return this.products;
+    return this.products.filter(p => p.categoryId === this.activeCategoryId || p.category?.id === this.activeCategoryId);
+  }
+
+  get activeCategoryName(): string | null {
+    if (this.activeCategoryId === 'all') return null;
+    const cat = this.categories.find(c => c.id === this.activeCategoryId);
+    return cat?.name ?? null;
+  }
+
+  selectCategory(id: 'all' | number): void {
+    this.activeCategoryId = id;
+    const queryParams = id === 'all' ? {} : { category: id };
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge',
+    });
   }
 
   private truncate(s: string | null | undefined, max: number): string {

@@ -10,7 +10,7 @@ import { PricePipe } from '../../../shared/pipes/price.pipe';
   standalone: true,
   imports: [CommonModule, RouterModule, PricePipe, DatePipe],
   template: `
-    <div class="orders-history">
+    <div class="orders-history page-section section-cosmetic-cream">
       <div class="container">
         <h1>Mes commandes</h1>
         <nav class="account-nav">
