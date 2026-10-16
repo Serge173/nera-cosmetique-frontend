@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,12 +15,9 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule, PricePipe],
+  imports: [CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <div class="admin-header">
             <div>
               <h1>Gestion des produits</h1>
@@ -52,6 +49,11 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
                 {{ cat.name }}
               </button>
             }
+          </div>
+
+          <div class="filters product-search-row">
+            <input type="search" [(ngModel)]="searchTerm" name="productSearch" placeholder="Rechercher un produit par nom..." aria-label="Rechercher un produit" />
+            <span class="product-count">{{ filteredProducts.length }} produit(s)</span>
           </div>
 
         @if (showForm) {
@@ -173,11 +175,12 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
             </tbody>
           </table>
         </div>
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
+    .product-search-row { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; }
+    .product-search-row input { flex: 1; max-width: 420px; }
+    .product-count { font-size: .82rem; color: var(--adm-muted, #888); white-space: nowrap; }
     .admin-layout {
       padding: 32px 0;
     }
@@ -341,6 +344,8 @@ export class AdminProductsComponent implements OnInit {
   showForm = false;
   editingProduct: Product | null = null;
   activeCategoryId: 'all' | number = 'all';
+  searchTerm = '';
+  private destroyRef = inject(DestroyRef);
 
   form = {
     name: '',
@@ -369,6 +374,14 @@ export class AdminProductsComponent implements OnInit {
     if (initialCategory && !Number.isNaN(Number(initialCategory))) {
       this.activeCategoryId = Number(initialCategory);
     }
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const q = params.get('q');
+      if (q !== null) this.searchTerm = q;
+      if (params.get('nouveau')) {
+        this.cancelForm();
+        this.showForm = true;
+      }
+    });
     this.loadProducts();
     this.loadCategories();
     this.loadBrands();
@@ -428,8 +441,14 @@ export class AdminProductsComponent implements OnInit {
   }
 
   get filteredProducts(): Product[] {
-    if (this.activeCategoryId === 'all') return this.products;
-    return this.products.filter(p => p.categoryId === this.activeCategoryId || p.category?.id === this.activeCategoryId);
+    const normalize = (s: string) => (s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const q = normalize(this.searchTerm);
+    return this.products.filter(p => {
+      if (this.activeCategoryId !== 'all' && p.categoryId !== this.activeCategoryId && p.category?.id !== this.activeCategoryId) {
+        return false;
+      }
+      return !q || normalize(p.name).includes(q);
+    });
   }
 
   get activeCategoryName(): string | null {

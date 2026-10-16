@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -20,12 +19,9 @@ interface AdminUser {
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <div class="admin-header">
             <h1>Gestion des utilisateurs</h1>
             <button type="button" class="btn btn-primary" (click)="showForm = !showForm">
@@ -118,9 +114,7 @@ interface AdminUser {
               </table>
             }
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
     .admin-layout { padding: 32px 0; }

@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -23,12 +22,9 @@ interface AdminSlide {
 @Component({
   selector: 'app-admin-slides',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <h1>Gestion des slides d'accueil</h1>
 
           <div class="form-panel">
@@ -154,9 +150,7 @@ interface AdminSlide {
               </table>
             }
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
     .admin-layout { padding: 32px 0; }

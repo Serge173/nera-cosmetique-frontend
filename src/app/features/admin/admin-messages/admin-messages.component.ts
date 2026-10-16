@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -21,12 +20,9 @@ interface AdminMessage {
 @Component({
   selector: 'app-admin-messages',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule, DatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, DatePipe],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <div class="admin-header">
             <h1>Messagerie</h1>
             <p class="admin-subtitle">
@@ -115,9 +111,7 @@ interface AdminMessage {
               Sélectionnez un message à gauche pour le consulter.
             </div>
           </ng-template>
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
     .admin-layout { padding: 32px 0; }

@@ -1,0 +1,277 @@
+<div class="dash">
+  <!-- ============ Colonne principale ============ -->
+  <section class="dash-main">
+    <header class="greet">
+      <div>
+        <h1>Bonjour {{ firstName }} <span class="wave" aria-hidden="true">👋</span></h1>
+        <p>Voici un aperçu de l'activité de votre boutique aujourd'hui.</p>
+      </div>
+      <div class="greet-tools">
+        <span class="today"><i class="fa-regular fa-calendar"></i>{{ today }}</span>
+        <button type="button" class="refresh" (click)="load(true)" [disabled]="refreshing()" aria-label="Actualiser" title="Actualiser">
+          <i class="fa-solid fa-rotate-right" [class.spin]="refreshing()"></i>
+        </button>
+      </div>
+    </header>
+
+    @if (error()) {
+      <div class="adm-card load-error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Impossible de charger les statistiques.</span>
+        <button type="button" class="adm-btn adm-btn-sm" (click)="load(true)">Réessayer</button>
+      </div>
+    }
+
+    <!-- KPI -->
+    <div class="kpis">
+      @if (loading()) {
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="adm-card kpi"><div class="adm-skel" style="height: 92px"></div></div>
+        }
+      } @else {
+        @if (data(); as d) {
+        <article class="adm-card kpi">
+          <span class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+          <div class="kpi-body">
+            <span class="kpi-label">Total des ventes</span>
+            <strong class="kpi-value">{{ formatPrice(d.kpis.sales.value) }}</strong>
+            <span class="kpi-change {{ changeClass(d.kpis.sales.change) }}">
+              <i class="fa-solid" [class.fa-arrow-up]="changeClass(d.kpis.sales.change) === 'up'" [class.fa-arrow-down]="changeClass(d.kpis.sales.change) === 'down'" [class.fa-minus]="changeClass(d.kpis.sales.change) === 'flat'"></i>
+              {{ changeText(d.kpis.sales.change) }} <em>{{ periodShort() }}</em>
+            </span>
+          </div>
+          <adm-sparkline class="kpi-spark" [values]="d.kpis.sales.spark" />
+        </article>
+
+        <article class="adm-card kpi">
+          <span class="kpi-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+          <div class="kpi-body">
+            <span class="kpi-label">Commandes</span>
+            <strong class="kpi-value">{{ formatNumber(d.kpis.orders.value) }}</strong>
+            <span class="kpi-change {{ changeClass(d.kpis.orders.change) }}">
+              <i class="fa-solid" [class.fa-arrow-up]="changeClass(d.kpis.orders.change) === 'up'" [class.fa-arrow-down]="changeClass(d.kpis.orders.change) === 'down'" [class.fa-minus]="changeClass(d.kpis.orders.change) === 'flat'"></i>
+              {{ changeText(d.kpis.orders.change) }} <em>{{ periodShort() }}</em>
+            </span>
+          </div>
+          <adm-sparkline class="kpi-spark" [values]="d.kpis.orders.spark" />
+        </article>
+
+        <article class="adm-card kpi">
+          <span class="kpi-icon"><i class="fa-regular fa-user"></i></span>
+          <div class="kpi-body">
+            <span class="kpi-label">Clients inscrits</span>
+            <strong class="kpi-value">{{ formatNumber(d.kpis.customers.value) }}</strong>
+            <span class="kpi-change {{ changeClass(d.kpis.customers.change) }}">
+              <i class="fa-solid" [class.fa-arrow-up]="changeClass(d.kpis.customers.change) === 'up'" [class.fa-arrow-down]="changeClass(d.kpis.customers.change) === 'down'" [class.fa-minus]="changeClass(d.kpis.customers.change) === 'flat'"></i>
+              +{{ d.kpis.customers.newInPeriod }} <em>sur la période</em>
+            </span>
+          </div>
+          <adm-sparkline class="kpi-spark" [values]="d.kpis.customers.spark" />
+        </article>
+
+        <article class="adm-card kpi">
+          <span class="kpi-icon"><i class="fa-solid fa-cube"></i></span>
+          <div class="kpi-body">
+            <span class="kpi-label">Produits en stock</span>
+            <strong class="kpi-value">{{ formatNumber(d.kpis.stock.value) }}</strong>
+            @if (d.kpis.stock.lowStock + d.kpis.stock.outOfStock > 0) {
+              <a routerLink="/admin/stock" class="kpi-change down">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                {{ d.kpis.stock.lowStock + d.kpis.stock.outOfStock }} <em>à réapprovisionner</em>
+              </a>
+            } @else {
+              <span class="kpi-change up"><i class="fa-solid fa-check"></i> {{ formatNumber(d.kpis.stock.units) }} <em>unités</em></span>
+            }
+          </div>
+          <adm-sparkline class="kpi-spark" [values]="d.kpis.stock.spark" />
+        </article>
+        }
+      }
+    </div>
+
+    <!-- Graphiques -->
+    <div class="charts">
+      <article class="adm-card chart-card">
+        <div class="adm-card-head">
+          <h2>Évolution des ventes</h2>
+          <label class="period">
+            <i class="fa-regular fa-calendar"></i>
+            <select [ngModel]="days" (ngModelChange)="changePeriod($event)" aria-label="Période">
+              @for (p of periods; track p.days) {
+                <option [ngValue]="p.days">{{ p.label }}</option>
+              }
+            </select>
+            <i class="fa-solid fa-chevron-down caret"></i>
+          </label>
+        </div>
+        <div class="adm-card-body">
+          @if (loading()) {
+            <div class="adm-skel" style="height: 240px"></div>
+          } @else {
+            <adm-line-chart [points]="linePoints()" [height]="250" [format]="priceFormat" ariaLabel="Évolution du chiffre d'affaires" />
+          }
+        </div>
+      </article>
+
+      <article class="adm-card chart-card">
+        <div class="adm-card-head">
+          <h2>Répartition des ventes par catégorie</h2>
+        </div>
+        <div class="adm-card-body donut-body">
+          @if (loading()) {
+            <div class="adm-skel" style="height: 190px"></div>
+          } @else {
+            <adm-donut-chart [data]="donut()" [centerValue]="formatNumber(donutTotal())" centerLabel="F CFA d'articles" ariaLabel="Répartition des ventes par catégorie" />
+          }
+        </div>
+      </article>
+    </div>
+
+    <!-- Dernières commandes -->
+    <article class="adm-card orders-card">
+      <div class="adm-card-head">
+        <h2>Dernières commandes</h2>
+        <a routerLink="/admin/orders" class="adm-link">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="adm-card-body">
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>N° commande</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th>Montant</th>
+                <th>Statut</th>
+                <th class="actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loading()) {
+                @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <tr><td colspan="6"><div class="adm-skel" style="height: 22px"></div></td></tr>
+                }
+              } @else {
+                @for (o of (data()?.recentOrders ?? []).slice(0, 5); track o.id) {
+                  <tr>
+                    <td class="strong">#{{ o.orderNumber }}</td>
+                    <td>{{ o.customer || '—' }}</td>
+                    <td class="muted">{{ formatDateTime(o.createdAt) }}</td>
+                    <td class="strong nowrap">{{ formatPrice(o.total) }}</td>
+                    <td><span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span></td>
+                    <td class="actions">
+                      <a class="adm-btn adm-btn-xs" routerLink="/admin/orders" [queryParams]="{ q: o.orderNumber }">Voir</a>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6">
+                      <div class="adm-empty"><i class="fa-solid fa-receipt"></i><strong>Aucune commande pour le moment</strong>Les nouvelles commandes apparaîtront ici.</div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+
+    <!-- Actions rapides -->
+    <nav class="quick" aria-label="Actions rapides">
+      @for (a of quickActions; track a.title) {
+        <a class="adm-card quick-item" [routerLink]="a.link" [queryParams]="a.query ?? null">
+          <span class="quick-icon"><i class="fa-solid {{ a.icon }}"></i></span>
+          <span class="quick-text">
+            <strong>{{ a.title }}</strong>
+            <small>{{ a.text }}</small>
+          </span>
+        </a>
+      }
+    </nav>
+  </section>
+
+  <!-- ============ Colonne droite ============ -->
+  <aside class="dash-side">
+    <a routerLink="/" class="hero" aria-label="Voir la boutique">
+      <img src="assets/images/admin/admin-hero.jpg" alt="" />
+      <span class="hero-brand">
+        <span class="hero-script">Nera</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 3C11 3 5 8 5 15c0 1.6.4 3 1 4.2C8 13 12 9.5 17 7.5 12.5 10.5 9.3 14.6 7.6 20.4 8.9 21.4 10.4 22 12 22c6 0 9-6 8-19Z" /></svg>
+        <span class="hero-sub">Cosmétique</span>
+      </span>
+      <span class="hero-tagline">Des soins naturels<br />pour une beauté authentique</span>
+    </a>
+
+    <article class="adm-card side-card">
+      <div class="side-head">
+        <h2>Commandes récentes</h2>
+        <a routerLink="/admin/orders" class="adm-link">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <ul class="side-list">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <li class="side-row"><div class="adm-skel" style="height: 52px; width: 100%"></div></li>
+          }
+        } @else {
+          @for (o of (data()?.recentOrders ?? []).slice(0, 5); track o.id) {
+            <li>
+              <a class="side-row" routerLink="/admin/orders" [queryParams]="{ q: o.orderNumber }">
+                @if (o.image) {
+                  <img class="row-thumb" [src]="o.image" alt="" loading="lazy" />
+                } @else {
+                  <span class="row-thumb ph"><i class="fa-solid fa-bag-shopping"></i></span>
+                }
+                <span class="row-main">
+                  <strong [title]="'#' + o.orderNumber">#{{ o.orderNumber }}</strong>
+                  <small>{{ formatDateTime(o.createdAt) }}</small>
+                  <b>{{ formatPrice(o.total) }}</b>
+                </span>
+                <span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                <i class="fa-solid fa-chevron-right row-caret"></i>
+              </a>
+            </li>
+          } @empty {
+            <li class="side-empty">Aucune commande récente</li>
+          }
+        }
+      </ul>
+    </article>
+
+    <article class="adm-card side-card">
+      <div class="side-head">
+        <h2>Produits les plus vendus</h2>
+        <a routerLink="/admin/rapports" class="adm-link">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <ul class="side-list">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <li class="side-row"><div class="adm-skel" style="height: 40px; width: 100%"></div></li>
+          }
+        } @else {
+          @for (p of data()?.topProducts ?? []; track p.productId; let i = $index) {
+            <li>
+              <a class="side-row top-row" routerLink="/admin/products" [queryParams]="{ q: p.name }">
+                <span class="rank" [class.first]="i === 0">
+                  @if (i === 0) { <i class="fa-solid fa-crown"></i> } @else { {{ i + 1 }} }
+                </span>
+                @if (p.image) {
+                  <img class="row-thumb sm" [src]="p.image" alt="" loading="lazy" />
+                } @else {
+                  <span class="row-thumb sm ph"><i class="fa-solid fa-bottle-droplet"></i></span>
+                }
+                <span class="row-main">
+                  <strong>{{ p.name }}</strong>
+                  <small>{{ formatNumber(p.quantity) }} vente{{ p.quantity > 1 ? 's' : '' }}</small>
+                </span>
+                <i class="fa-solid fa-chevron-right row-caret"></i>
+              </a>
+            </li>
+          } @empty {
+            <li class="side-empty">Pas encore de ventes</li>
+          }
+        }
+      </ul>
+    </article>
+  </aside>
+</div>

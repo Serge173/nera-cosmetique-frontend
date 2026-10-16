@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -26,12 +25,9 @@ interface AdminStockSummaryByCategory {
 @Component({
   selector: 'app-admin-stock',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule, PricePipe],
+  imports: [CommonModule, RouterModule, FormsModule, PricePipe],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <h1>Gestion des stocks</h1>
 
           @if (loading) {
@@ -140,9 +136,7 @@ interface AdminStockSummaryByCategory {
               </ng-template>
             </section>
           }
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
     .admin-layout { padding: 32px 0; }

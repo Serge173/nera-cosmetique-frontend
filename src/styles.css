@@ -98,12 +98,6 @@ img {
   width: 100%;
 }
 
-/* Layout admin pleine largeur */
-.admin-layout > .container {
-  max-width: 100%;
-  width: 100%;
-}
-
 .btn {
   padding: 12px 24px;
   min-height: var(--touch-min);
@@ -267,56 +261,5 @@ img {
   .page-section::after {
     opacity: 0.04;
     background-size: 140px 220px, 140px 220px;
-  }
-}
-
-/* ========== Console admin – mise en page responsive commune ========== */
-/* Sélecteurs préfixés par app-root pour primer sur les styles encapsulés des composants admin */
-app-root .admin-layout-inner > .admin-main {
-  flex: 1;
-  min-width: 0;
-}
-app-root .admin-main img {
-  max-width: 100%;
-}
-@media (max-width: 992px) {
-  app-root .admin-layout[class] {
-    padding: 12px 0 32px;
-  }
-  app-root .admin-layout .admin-layout-inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-  app-root .admin-main h1 {
-    font-size: 1.5rem;
-  }
-  app-root .admin-main .admin-header {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  app-root .admin-main table {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  app-root .admin-main th,
-  app-root .admin-main td {
-    white-space: nowrap;
-  }
-}
-@media (max-width: 768px) {
-  app-root .admin-main .form-row,
-  app-root .admin-main .form-grid {
-    grid-template-columns: 1fr;
-  }
-  app-root .admin-main .form-panel {
-    padding: 16px;
-  }
-  app-root .admin-main .form-actions {
-    flex-wrap: wrap;
   }
 }

@@ -1,241 +1,225 @@
-import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
-import { CommonModule, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
-import { Order } from '../../../models/order.model';
-import { PricePipe } from '../../../shared/pipes/price.pipe';
 import { ToastService } from '../../../core/services/toast.service';
+import { Order } from '../../../models/order.model';
+import { AdminSummaryService } from '../shared/admin-summary.service';
+import {
+  ORDER_STATUS_LIST,
+  OrderStatus,
+  downloadCsv,
+  formatDate,
+  formatDateTime,
+  formatPrice,
+  paymentLabel,
+  statusLabel,
+  statusTone,
+} from '../shared/admin-format';
 
-const STATUS_OPTIONS: { value: Order['status']; label: string }[] = [
-  { value: 'pending', label: 'En attente' },
-  { value: 'paid', label: 'Payée' },
-  { value: 'processing', label: 'En traitement' },
-  { value: 'shipped', label: 'Expédiée' },
-  { value: 'delivered', label: 'Livrée' },
-  { value: 'cancelled', label: 'Annulée' }
-];
+type AdminOrder = Order & { notes?: string | null };
+
+const PAGE_SIZE = 15;
+const FLOW: OrderStatus[] = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
 
 @Component({
   selector: 'app-admin-orders',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule, PricePipe, DatePipe],
-  template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
-        <h1>Gestion des commandes</h1>
-        @if (loading) {
-          <p>Chargement...</p>
-        } @else {
-          <div class="orders-table-wrap">
-            <table class="orders-table">
-              <thead>
-                <tr>
-                  <th>N° commande</th>
-                  <th>Date</th>
-                  <th>Client</th>
-                  <th>Total</th>
-                  <th>Statut</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (order of orders; track order.id) {
-                  <tr>
-                    <td>{{ order.orderNumber }}</td>
-                    <td>{{ order.createdAt | date:'short':'GMT' }}</td>
-                    <td>{{ order.firstName }} {{ order.lastName }}<br><small>{{ order.email }}</small></td>
-                    <td>{{ order.total | price }}</td>
-                    <td>
-                      <div class="status-cell">
-                        <span class="status-badge" [ngClass]="'status-' + order.status">
-                          {{ getStatusLabel(order.status) }}
-                        </span>
-                        <select
-                          class="status-select"
-                          [value]="order.status"
-                          (change)="updateStatus(order, $any($event.target).value)"
-                          [disabled]="updatingId === order.id">
-                          @for (opt of statusOptions; track opt.value) {
-                            <option [value]="opt.value">{{ opt.label }}</option>
-                          }
-                        </select>
-                      </div>
-                    </td>
-                    <td>
-                      <button type="button" class="btn-link" (click)="toggleDetail(order)">
-                        {{ selectedOrder?.id === order.id ? 'Masquer' : 'Détails' }}
-                      </button>
-                    </td>
-                  </tr>
-                  @if (selectedOrder?.id === order.id) {
-                    <tr class="detail-row">
-                      <td colspan="6">
-                        <div class="order-detail-panel">
-                          <h3>Commande {{ order.orderNumber }}</h3>
-                          <p><strong>Adresse:</strong> {{ order.addressLine1 }}, {{ order.city }} — {{ order.phone }}</p>
-                          <p><strong>Livraison:</strong> {{ order.deliveryMethod }} — <strong>Paiement:</strong> {{ order.paymentMethod }}</p>
-                          <div class="detail-items">
-                            <strong>Articles:</strong>
-                            @for (item of order.items; track item.id) {
-                              <div class="item-block">
-                                <div class="item-name">{{ item.productName }} × {{ item.quantity }} — {{ item.totalPrice | price }}</div>
-                                @if (item.productBrandName) {
-                                  <div class="item-meta">Marque: {{ item.productBrandName }}</div>
-                                }
-                                @if (item.productShortDescription) {
-                                  <div class="item-desc">{{ item.productShortDescription }}</div>
-                                }
-                              </div>
-                            }
-                          </div>
-                          <div class="detail-totals">
-                            Sous-total: {{ order.subtotal | price }} — Livraison: {{ order.shippingAmount | price }}
-                            — Total: {{ order.total | price }}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                }
-              </tbody>
-            </table>
-          </div>
-          @if (orders.length === 0) {
-            <p>Aucune commande.</p>
-          }
-        }
-        </main>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .admin-layout { padding: 32px 0; }
-    .admin-layout-inner {
-      display: flex;
-      align-items: flex-start;
-      gap: 24px;
-    }
-    .admin-main {
-      flex: 1;
-    }
-    .orders-table-wrap { overflow-x: auto; background: white; border-radius: 8px; padding: 16px; }
-    .orders-table { width: 100%; border-collapse: collapse; }
-    .orders-table th, .orders-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
-    .orders-table th { font-weight: 600; color: var(--text-light); font-size: 12px; text-transform: uppercase; }
-    .status-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .status-select {
-      padding: 4px 8px;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      font-size: 13px;
-      background: #fff;
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .02em;
-      text-transform: uppercase;
-    }
-    .status-pending {
-      background: #fff3e0; /* orange pâle */
-      color: #ef6c00;
-    }
-    .status-processing {
-      background: #e1f5fe; /* bleu clair */
-      color: #0277bd;
-    }
-    .status-shipped {
-      background: #ede7f6; /* violet clair */
-      color: #5e35b1;
-    }
-    .status-paid {
-      background: #c8e6c9; /* vert moyen */
-      color: #1b5e20;
-    }
-    .status-delivered {
-      background: #e8f5e9; /* vert différent, plus doux */
-      color: #2e7d32;
-    }
-    .status-cancelled {
-      background: #ffebee; /* rouge pâle */
-      color: #c62828;
-    }
-    .btn-link { background: none; border: none; color: var(--primary-color); cursor: pointer; text-decoration: underline; }
-    .detail-row td { background: var(--secondary-color); vertical-align: top; }
-    .order-detail-panel { padding: 16px; max-width: 600px; }
-    .order-detail-panel h3 { margin-bottom: 12px; }
-    .order-detail-panel p { margin-bottom: 8px; font-size: 14px; }
-    .detail-items { margin: 12px 0; font-size: 14px; }
-    .detail-items .item-block { padding: 8px 0; border-bottom: 1px solid var(--border-color); }
-    .detail-items .item-block:last-child { border-bottom: none; }
-    .detail-items .item-name { font-weight: 600; }
-    .detail-items .item-meta { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-    .detail-items .item-desc { font-size: 12px; color: var(--text-dark); margin-top: 4px; max-width: 400px; }
-    .detail-totals { margin-top: 12px; font-size: 14px; color: var(--text-light); }
-  `]
+  imports: [FormsModule],
+  templateUrl: './admin-orders.component.html',
+  styleUrl: './admin-orders.component.css',
 })
 export class AdminOrdersComponent implements OnInit {
-  orders: Order[] = [];
-  loading = true;
-  selectedOrder: Order | null = null;
-  updatingId: string | null = null;
-  statusOptions = STATUS_OPTIONS;
+  private api = inject(ApiService);
+  private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private summary = inject(AdminSummaryService);
 
-  constructor(
-    private api: ApiService,
-    private toast: ToastService,
-  ) {}
+  readonly statuses = ORDER_STATUS_LIST;
+  readonly flow = FLOW;
+  readonly orders = signal<AdminOrder[]>([]);
+  readonly loading = signal(true);
+  readonly updatingId = signal<string | null>(null);
+  readonly selected = signal<AdminOrder | null>(null);
 
-  ngOnInit() {
-    this.loadOrders();
+  readonly search = signal('');
+  readonly status = signal<OrderStatus | 'all'>('all');
+  readonly period = signal<'all' | '1' | '7' | '30'>('all');
+  readonly page = signal(1);
+
+  readonly counts = computed(() => {
+    const c: Record<string, number> = { all: this.orders().length };
+    for (const o of this.orders()) c[o.status] = (c[o.status] ?? 0) + 1;
+    return c;
+  });
+
+  readonly stats = computed(() => {
+    const list = this.orders();
+    const valid = list.filter((o) => o.status !== 'cancelled');
+    return {
+      total: list.length,
+      pending: list.filter((o) => o.status === 'pending').length,
+      inProgress: list.filter((o) => ['paid', 'processing', 'shipped'].includes(o.status)).length,
+      delivered: list.filter((o) => o.status === 'delivered').length,
+      revenue: valid.reduce((s, o) => s + Number(o.total || 0), 0),
+    };
+  });
+
+  readonly filtered = computed(() => {
+    const q = this.normalize(this.search());
+    const st = this.status();
+    const days = this.period() === 'all' ? 0 : Number(this.period());
+    const since = days ? Date.now() - days * 86_400_000 : 0;
+    return this.orders().filter((o) => {
+      if (st !== 'all' && o.status !== st) return false;
+      if (since && new Date(o.createdAt).getTime() < since) return false;
+      if (!q) return true;
+      const hay = this.normalize(`${o.orderNumber} ${o.firstName} ${o.lastName} ${o.email} ${o.phone} ${o.city}`);
+      return hay.includes(q);
+    });
+  });
+
+  readonly pageCount = computed(() => Math.max(1, Math.ceil(this.filtered().length / PAGE_SIZE)));
+  readonly paged = computed(() => {
+    const p = Math.min(this.page(), this.pageCount());
+    return this.filtered().slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE);
+  });
+
+  readonly formatPrice = formatPrice;
+  readonly formatDate = formatDate;
+  readonly formatDateTime = formatDateTime;
+  readonly statusLabel = statusLabel;
+  readonly statusTone = statusTone;
+  readonly paymentLabel = paymentLabel;
+
+  ngOnInit(): void {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const q = params.get('q') ?? '';
+      const st = params.get('status') as OrderStatus | null;
+      this.search.set(q);
+      this.status.set(st && this.statuses.some((s) => s.value === st) ? st : 'all');
+      this.page.set(1);
+      this.autoOpen();
+    });
+    this.load();
   }
 
-  getStatusLabel(status: Order['status']): string {
-    const found = this.statusOptions.find(o => o.value === status);
-    return found?.label ?? status;
-  }
-
-  loadOrders() {
-    this.api.get<Order[]>('/admin/orders').subscribe({
-      next: (orders) => {
-        this.orders = orders;
-        this.loading = false;
+  load(): void {
+    this.loading.set(true);
+    this.api.get<AdminOrder[]>('/admin/orders').subscribe({
+      next: (list) => {
+        this.orders.set(list ?? []);
+        this.loading.set(false);
+        this.autoOpen();
+        const sel = this.selected();
+        if (sel) this.selected.set(this.orders().find((o) => o.id === sel.id) ?? null);
       },
-      error: () => { this.loading = false; }
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Impossible de charger les commandes.');
+      },
     });
   }
 
-  toggleDetail(order: Order) {
-    this.selectedOrder = this.selectedOrder?.id === order.id ? null : order;
+  private autoOpen(): void {
+    const q = this.search().trim().toLowerCase();
+    if (!q || this.loading()) return;
+    const match = this.orders().find((o) => o.orderNumber.toLowerCase() === q);
+    if (match) this.selected.set(match);
   }
 
-  updateStatus(order: Order, status: string) {
-    if (status === order.status) return;
-    this.updatingId = order.id;
-    this.api.patch<Order>(`/admin/orders/${order.id}/status`, { status }).subscribe({
+  private normalize(s: string): string {
+    return (s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  }
+
+  onSearch(value: string): void {
+    this.search.set(value);
+    this.page.set(1);
+  }
+
+  setStatus(value: OrderStatus | 'all'): void {
+    this.status.set(value);
+    this.page.set(1);
+  }
+
+  setPeriod(value: 'all' | '1' | '7' | '30'): void {
+    this.period.set(value);
+    this.page.set(1);
+  }
+
+  resetFilters(): void {
+    this.search.set('');
+    this.status.set('all');
+    this.period.set('all');
+    this.page.set(1);
+    this.router.navigate([], { queryParams: {} });
+  }
+
+  open(order: AdminOrder): void {
+    this.selected.set(order);
+  }
+
+  close(): void {
+    this.selected.set(null);
+    if (this.route.snapshot.queryParamMap.get('q')) {
+      this.router.navigate([], { queryParams: { q: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
+  }
+
+  stepIndex(status: string): number {
+    return FLOW.indexOf(status as OrderStatus);
+  }
+
+  addressOf(o: AdminOrder): string {
+    return [o.addressLine1, o.addressLine2, [o.city, o.postalCode].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  }
+
+  itemsCount(order: AdminOrder): number {
+    return (order.items ?? []).reduce((s, i) => s + Number(i.quantity || 0), 0);
+  }
+
+  updateStatus(order: AdminOrder, status: OrderStatus): void {
+    if (status === order.status || this.updatingId()) return;
+    if (status === 'cancelled' && !confirm(`Annuler la commande #${order.orderNumber} ?`)) return;
+    this.updatingId.set(order.id);
+    this.api.patch<AdminOrder>(`/admin/orders/${order.id}/status`, { status }).subscribe({
       next: (updated) => {
-        order.status = updated.status;
-        this.updatingId = null;
-        this.toast.success('Statut de la commande mis à jour.');
+        const next = { ...order, status: updated?.status ?? status };
+        this.orders.update((list) => list.map((o) => (o.id === order.id ? next : o)));
+        if (this.selected()?.id === order.id) this.selected.set(next);
+        this.updatingId.set(null);
+        this.summary.refresh();
+        this.toast.success(`Commande #${order.orderNumber} : ${statusLabel(next.status)}.`);
       },
       error: (err) => {
-        this.updatingId = null;
-        const msg = err?.error?.message || 'Impossible de mettre à jour le statut.';
-        this.toast.error(msg);
-      }
+        this.updatingId.set(null);
+        this.toast.error(err?.error?.message || 'Impossible de mettre à jour le statut.');
+      },
     });
+  }
+
+  exportCsv(): void {
+    const rows: (string | number)[][] = [
+      ['N° commande', 'Date', 'Client', 'Email', 'Téléphone', 'Ville', 'Articles', 'Sous-total', 'Livraison', 'Remise', 'Total', 'Paiement', 'Statut'],
+      ...this.filtered().map((o) => [
+        o.orderNumber,
+        formatDateTime(o.createdAt),
+        `${o.firstName} ${o.lastName}`.trim(),
+        o.email,
+        o.phone,
+        o.city,
+        this.itemsCount(o),
+        Number(o.subtotal || 0),
+        Number(o.shippingAmount || 0),
+        Number(o.discountAmount || 0),
+        Number(o.total || 0),
+        paymentLabel(o.paymentMethod),
+        statusLabel(o.status),
+      ]),
+    ];
+    downloadCsv(`commandes-nera-${new Date().toISOString().slice(0, 10)}.csv`, rows);
   }
 }

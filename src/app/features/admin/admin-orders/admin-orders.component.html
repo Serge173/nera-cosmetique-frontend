@@ -1,0 +1,218 @@
+<header class="adm-page-head">
+  <div>
+    <h1>Commandes</h1>
+    <p>Consultez les commandes et suivez leur statut, de la validation à la livraison.</p>
+  </div>
+  <div class="adm-page-actions">
+    <button type="button" class="adm-btn adm-btn-ghost" (click)="load()" [disabled]="loading()">
+      <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <button type="button" class="adm-btn" (click)="exportCsv()" [disabled]="!filtered().length">
+      <i class="fa-solid fa-file-arrow-down"></i> Exporter (CSV)
+    </button>
+  </div>
+</header>
+
+<div class="adm-stats">
+  <div class="adm-card adm-stat">
+    <span class="adm-stat-icon"><i class="fa-solid fa-receipt"></i></span>
+    <div><div class="adm-stat-label">Total commandes</div><div class="adm-stat-value">{{ stats().total }}</div></div>
+  </div>
+  <div class="adm-card adm-stat">
+    <span class="adm-stat-icon amber"><i class="fa-solid fa-hourglass-half"></i></span>
+    <div><div class="adm-stat-label">En attente</div><div class="adm-stat-value">{{ stats().pending }}</div></div>
+  </div>
+  <div class="adm-card adm-stat">
+    <span class="adm-stat-icon blue"><i class="fa-solid fa-truck-fast"></i></span>
+    <div><div class="adm-stat-label">En cours</div><div class="adm-stat-value">{{ stats().inProgress }}</div></div>
+  </div>
+  <div class="adm-card adm-stat">
+    <span class="adm-stat-icon green"><i class="fa-solid fa-sack-dollar"></i></span>
+    <div><div class="adm-stat-label">Chiffre d'affaires</div><div class="adm-stat-value">{{ formatPrice(stats().revenue) }}</div></div>
+  </div>
+</div>
+
+<section class="adm-card">
+  <div class="adm-toolbar">
+    <label class="adm-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input class="adm-input" type="search" [ngModel]="search()" (ngModelChange)="onSearch($event)"
+             placeholder="N° de commande, client, email, téléphone, ville..." aria-label="Rechercher une commande" />
+    </label>
+    <select class="adm-select period-select" [ngModel]="period()" (ngModelChange)="setPeriod($event)" aria-label="Période">
+      <option value="all">Toutes les dates</option>
+      <option value="1">Dernières 24 h</option>
+      <option value="7">7 derniers jours</option>
+      <option value="30">30 derniers jours</option>
+    </select>
+  </div>
+  <div class="adm-toolbar chips-bar">
+    <div class="adm-chips" role="tablist" aria-label="Filtrer par statut">
+      <button type="button" class="adm-chip" [class.active]="status() === 'all'" (click)="setStatus('all')">
+        Toutes <span class="count">{{ counts()['all'] || 0 }}</span>
+      </button>
+      @for (s of statuses; track s.value) {
+        <button type="button" class="adm-chip" [class.active]="status() === s.value" (click)="setStatus(s.value)">
+          <i class="fa-solid {{ s.icon }}"></i> {{ s.label }} <span class="count">{{ counts()[s.value] || 0 }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="adm-table-wrap">
+    <table class="adm-table orders">
+      <thead>
+        <tr>
+          <th>N° commande</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th>Articles</th>
+          <th>Montant</th>
+          <th>Paiement</th>
+          <th>Statut</th>
+          <th class="actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading() && !orders().length) {
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <tr><td colspan="8"><div class="adm-skel" style="height: 24px"></div></td></tr>
+          }
+        } @else {
+          @for (o of paged(); track o.id) {
+            <tr (click)="open(o)" class="clickable">
+              <td class="strong">#{{ o.orderNumber }}</td>
+              <td>
+                <div class="strong">{{ o.firstName }} {{ o.lastName }}</div>
+                <div class="muted">{{ o.email }}</div>
+              </td>
+              <td class="muted nowrap">{{ formatDateTime(o.createdAt) }}</td>
+              <td>{{ itemsCount(o) }}</td>
+              <td class="strong nowrap">{{ formatPrice(o.total) }}</td>
+              <td class="muted">{{ paymentLabel(o.paymentMethod) }}</td>
+              <td><span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span></td>
+              <td class="actions">
+                <button type="button" class="adm-btn adm-btn-xs" (click)="$event.stopPropagation(); open(o)">Voir</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="adm-empty">
+                  <i class="fa-solid fa-receipt"></i>
+                  @if (orders().length) {
+                    <strong>Aucune commande ne correspond à vos filtres</strong>
+                    <button type="button" class="adm-btn adm-btn-soft adm-btn-sm reset" (click)="resetFilters()">Réinitialiser les filtres</button>
+                  } @else {
+                    <strong>Aucune commande pour le moment</strong>
+                    Les commandes passées sur la boutique apparaîtront ici.
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pageCount() > 1) {
+    <footer class="pager">
+      <span>{{ filtered().length }} commande(s) — page {{ page() }} / {{ pageCount() }}</span>
+      <div>
+        <button type="button" class="adm-icon-btn sm" [disabled]="page() <= 1" (click)="page.set(page() - 1)" aria-label="Page précédente"><i class="fa-solid fa-chevron-left"></i></button>
+        <button type="button" class="adm-icon-btn sm" [disabled]="page() >= pageCount()" (click)="page.set(page() + 1)" aria-label="Page suivante"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </footer>
+  }
+</section>
+
+@if (selected(); as o) {
+  <div class="adm-overlay" (click)="close()"></div>
+  <aside class="adm-drawer" role="dialog" aria-modal="true" [attr.aria-label]="'Commande ' + o.orderNumber">
+    <div class="adm-drawer-head">
+      <div>
+        <h2>Commande #{{ o.orderNumber }}</h2>
+        <small class="muted">Passée le {{ formatDateTime(o.createdAt) }}</small>
+      </div>
+      <button type="button" class="adm-icon-btn" (click)="close()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="adm-drawer-body">
+      <div class="status-head">
+        <span class="adm-badge dot {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+        @if (o.status !== 'cancelled' && o.status !== 'delivered') {
+          <button type="button" class="adm-btn adm-btn-danger adm-btn-sm" (click)="updateStatus(o, 'cancelled')" [disabled]="updatingId() === o.id">
+            <i class="fa-solid fa-ban"></i> Annuler
+          </button>
+        }
+      </div>
+
+      <ol class="stepper" [class.cancelled]="o.status === 'cancelled'">
+        @for (s of flow; track s; let i = $index) {
+          <li [class.done]="stepIndex(o.status) >= i" [class.current]="stepIndex(o.status) === i">
+            <button type="button" (click)="updateStatus(o, s)" [disabled]="updatingId() === o.id || o.status === s"
+                    [attr.aria-label]="'Passer au statut ' + statusLabel(s)">
+              <span class="step-dot">
+                @if (stepIndex(o.status) > i) { <i class="fa-solid fa-check"></i> } @else { {{ i + 1 }} }
+              </span>
+              <span class="step-label">{{ statusLabel(s) }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+      @if (o.status === 'cancelled') {
+        <p class="cancel-note"><i class="fa-solid fa-circle-info"></i> Commande annulée. Cliquez sur une étape pour la réactiver.</p>
+      }
+
+      <section class="block">
+        <h3><i class="fa-regular fa-user"></i> Client</h3>
+        <dl class="kv">
+          <dt>Nom</dt><dd>{{ o.firstName }} {{ o.lastName }}</dd>
+          <dt>Email</dt><dd><a href="mailto:{{ o.email }}">{{ o.email }}</a></dd>
+          <dt>Téléphone</dt><dd><a href="tel:{{ o.phone }}">{{ o.phone }}</a></dd>
+        </dl>
+      </section>
+
+      <section class="block">
+        <h3><i class="fa-solid fa-location-dot"></i> Livraison & paiement</h3>
+        <dl class="kv">
+          <dt>Adresse</dt>
+          <dd>{{ addressOf(o) }}</dd>
+          @if (o.deliveryMethod) { <dt>Mode</dt><dd>{{ o.deliveryMethod }}</dd> }
+          <dt>Paiement</dt><dd>{{ paymentLabel(o.paymentMethod) }}</dd>
+          @if (o.notes) { <dt>Note</dt><dd>{{ o.notes }}</dd> }
+        </dl>
+      </section>
+
+      <section class="block">
+        <h3><i class="fa-solid fa-bag-shopping"></i> Articles ({{ itemsCount(o) }})</h3>
+        <ul class="items">
+          @for (it of o.items; track it.id) {
+            <li>
+              @if (it.productImageUrl) {
+                <img class="adm-thumb" [src]="it.productImageUrl" alt="" loading="lazy" />
+              } @else {
+                <span class="adm-thumb"><i class="fa-solid fa-bottle-droplet"></i></span>
+              }
+              <div class="it-main">
+                <strong>{{ it.productName }}</strong>
+                <small>
+                  @if (it.productBrandName) { {{ it.productBrandName }} • }
+                  {{ it.quantity }} × {{ formatPrice(it.unitPrice) }}
+                </small>
+              </div>
+              <b>{{ formatPrice(it.totalPrice) }}</b>
+            </li>
+          }
+        </ul>
+        <dl class="totals">
+          <dt>Sous-total</dt><dd>{{ formatPrice(o.subtotal) }}</dd>
+          <dt>Livraison</dt><dd>{{ +o.shippingAmount ? formatPrice(o.shippingAmount) : 'Offerte' }}</dd>
+          @if (+o.discountAmount) { <dt>Remise</dt><dd class="disc">− {{ formatPrice(o.discountAmount) }}</dd> }
+          <dt class="grand">Total</dt><dd class="grand">{{ formatPrice(o.total) }}</dd>
+        </dl>
+      </section>
+    </div>
+  </aside>
+}

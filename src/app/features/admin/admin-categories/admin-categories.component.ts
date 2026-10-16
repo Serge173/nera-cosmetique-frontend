@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,12 +18,9 @@ interface Category {
 @Component({
   selector: 'app-admin-categories',
   standalone: true,
-  imports: [AdminSidebarComponent, CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="admin-layout">
-      <div class="container admin-layout-inner">
-        <app-admin-sidebar></app-admin-sidebar>
-        <main class="admin-main">
+    <div class="admin-main legacy-page">
           <h1>Gestion des catégories</h1>
 
           <div class="form-panel">
@@ -105,9 +101,7 @@ interface Category {
               </table>
             }
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   `,
   styles: [`
     .admin-layout { padding: 32px 0; }

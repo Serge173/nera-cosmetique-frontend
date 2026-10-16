@@ -1,0 +1,216 @@
+<div class="adm-shell">
+  <aside class="side" [class.open]="navOpen()" aria-label="Navigation de l'administration">
+    <div class="side-head">
+      <a routerLink="/admin" class="brand" aria-label="Nera Cosmétique — tableau de bord">
+        <span class="brand-row">
+          <span class="brand-script">Nera</span>
+          <svg class="brand-leaf" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 3C11 3 5 8 5 15c0 1.6.4 3 1 4.2C8 13 12 9.5 17 7.5 12.5 10.5 9.3 14.6 7.6 20.4 8.9 21.4 10.4 22 12 22c6 0 9-6 8-19Z" />
+          </svg>
+        </span>
+        <span class="brand-sub">Cosmétique</span>
+      </a>
+      <button type="button" class="side-close" (click)="closeNav()" aria-label="Fermer le menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <nav class="side-nav">
+      @for (item of mainNav; track item.path) {
+        <a [routerLink]="item.path" class="nav-link" [class.active]="isActive(item)" [attr.aria-current]="isActive(item) ? 'page' : null">
+          <i class="fa-solid {{ item.icon }}" aria-hidden="true"></i>
+          <span class="nav-label">{{ item.label }}</span>
+          @if (badgeOf(item) > 0) {
+            <span class="nav-badge">{{ badgeOf(item) > 99 ? '99+' : badgeOf(item) }}</span>
+          }
+        </a>
+      }
+
+      <div class="side-sep"></div>
+      <p class="side-label">Autres</p>
+
+      @for (item of otherNav; track item.path) {
+        <a [routerLink]="item.path" class="nav-link" [class.active]="isActive(item)" [attr.aria-current]="isActive(item) ? 'page' : null">
+          <i class="fa-solid {{ item.icon }}" aria-hidden="true"></i>
+          <span class="nav-label">{{ item.label }}</span>
+          @if (badgeOf(item) > 0) {
+            <span class="nav-badge">{{ badgeOf(item) }}</span>
+          }
+        </a>
+      }
+      <button type="button" class="nav-link" (click)="logout()">
+        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+        <span class="nav-label">Déconnexion</span>
+      </button>
+    </nav>
+
+    <a routerLink="/" class="side-promo" aria-label="Voir la boutique Nera Cosmétique">
+      <img src="assets/images/admin/admin-promo.jpg" alt="" loading="lazy" />
+      <span class="promo-text">La beauté<br />au service<br />de votre confiance</span>
+      <svg class="promo-leaf" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 3C11 3 5 8 5 15c0 1.6.4 3 1 4.2C8 13 12 9.5 17 7.5 12.5 10.5 9.3 14.6 7.6 20.4 8.9 21.4 10.4 22 12 22c6 0 9-6 8-19Z" />
+      </svg>
+      <span class="promo-brand">Nera Cosmétique</span>
+    </a>
+  </aside>
+
+  @if (navOpen()) {
+    <div class="side-overlay" (click)="closeNav()" aria-hidden="true"></div>
+  }
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="burger" (click)="toggleNav()" aria-label="Ouvrir le menu" [attr.aria-expanded]="navOpen()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="top-search" data-menu>
+        <form class="search-box" role="search" (ngSubmit)="submitSearch()">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="q"
+            [ngModel]="searchTerm"
+            (ngModelChange)="onSearchInput($event)"
+            (focus)="onSearchFocus()"
+            placeholder="Rechercher un produit, une commande, un client..."
+            autocomplete="off"
+            aria-label="Recherche globale"
+            maxlength="80"
+          />
+          @if (searching()) {
+            <span class="search-spin" aria-hidden="true"></span>
+          }
+        </form>
+
+        @if (menu() === 'search') {
+          <div class="dropdown search-results" role="listbox">
+            @if (!searching() && !hasResults()) {
+              <p class="dd-empty"><i class="fa-solid fa-magnifying-glass"></i> Aucun résultat pour « {{ searchTerm }} »</p>
+            }
+            @if (results().orders.length) {
+              <p class="dd-title">Commandes</p>
+              @for (o of results().orders; track o.id) {
+                <button type="button" class="dd-item" (click)="go('/admin/orders', { q: o.orderNumber })">
+                  <span class="dd-icon"><i class="fa-solid fa-receipt"></i></span>
+                  <span class="dd-main">
+                    <strong>#{{ o.orderNumber }}</strong>
+                    <small>{{ o.customer }} • {{ formatPrice(o.total) }}</small>
+                  </span>
+                  <span class="adm-badge {{ statusTone(o.status) }}">{{ statusLabel(o.status) }}</span>
+                </button>
+              }
+            }
+            @if (results().products.length) {
+              <p class="dd-title">Produits</p>
+              @for (p of results().products; track p.id) {
+                <button type="button" class="dd-item" (click)="go('/admin/products', { q: p.name })">
+                  @if (p.image) {
+                    <img class="dd-thumb" [src]="p.image" alt="" />
+                  } @else {
+                    <span class="dd-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+                  }
+                  <span class="dd-main">
+                    <strong>{{ p.name }}</strong>
+                    <small>{{ formatPrice(p.price) }} • Stock : {{ p.stock }}</small>
+                  </span>
+                </button>
+              }
+            }
+            @if (results().customers.length) {
+              <p class="dd-title">Clients</p>
+              @for (c of results().customers; track c.id) {
+                <button type="button" class="dd-item" (click)="go('/admin/clients', { id: c.id })">
+                  <span class="dd-icon"><i class="fa-solid fa-user"></i></span>
+                  <span class="dd-main">
+                    <strong>{{ c.name || c.email }}</strong>
+                    <small>{{ c.email }}</small>
+                  </span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <div class="top-actions">
+        <a routerLink="/" class="top-icon shop-link" title="Voir la boutique" aria-label="Voir la boutique">
+          <i class="fa-solid fa-store"></i>
+        </a>
+
+        <div class="menu-wrap" data-menu>
+          <button type="button" class="top-icon" (click)="toggleMenu('notif')" aria-label="Notifications" [attr.aria-expanded]="menu() === 'notif'">
+            <i class="fa-regular fa-bell"></i>
+            @if (notifTotal() > 0) {
+              <span class="bell-count">{{ notifTotal() > 99 ? '99+' : notifTotal() }}</span>
+            }
+          </button>
+          @if (menu() === 'notif') {
+            <div class="dropdown notif-menu">
+              <p class="dd-head">Notifications</p>
+              @if (notifTotal() === 0) {
+                <p class="dd-empty"><i class="fa-regular fa-circle-check"></i> Tout est à jour</p>
+              }
+              @if (summary().pendingOrders > 0) {
+                <button type="button" class="dd-item" (click)="go('/admin/orders', { status: 'pending' })">
+                  <span class="dd-icon amber"><i class="fa-solid fa-clipboard-list"></i></span>
+                  <span class="dd-main"><strong>{{ summary().pendingOrders }} commande(s) en attente</strong><small>À confirmer et préparer</small></span>
+                </button>
+              }
+              @if (summary().unreadMessages > 0) {
+                <button type="button" class="dd-item" (click)="go('/admin/messages')">
+                  <span class="dd-icon blue"><i class="fa-solid fa-envelope"></i></span>
+                  <span class="dd-main"><strong>{{ summary().unreadMessages }} message(s) non lu(s)</strong><small>Formulaire de contact</small></span>
+                </button>
+              }
+              @if (summary().pendingReviews > 0) {
+                <button type="button" class="dd-item" (click)="go('/admin/avis')">
+                  <span class="dd-icon violet"><i class="fa-solid fa-star"></i></span>
+                  <span class="dd-main"><strong>{{ summary().pendingReviews }} avis à modérer</strong><small>Avis clients en attente</small></span>
+                </button>
+              }
+              @if (summary().lowStock > 0) {
+                <button type="button" class="dd-item" (click)="go('/admin/stock')">
+                  <span class="dd-icon red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                  <span class="dd-main"><strong>{{ summary().lowStock }} produit(s) en stock faible</strong><small>Moins de 5 unités disponibles</small></span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="menu-wrap" data-menu>
+          <button type="button" class="profile" (click)="toggleMenu('profile')" [attr.aria-expanded]="menu() === 'profile'" aria-label="Menu du compte">
+            <span class="profile-avatar">{{ userInitials() }}</span>
+            <span class="profile-text">
+              <strong>{{ userName() }}</strong>
+              <small>Administrateur</small>
+            </span>
+            <i class="fa-solid fa-chevron-down profile-caret"></i>
+          </button>
+          @if (menu() === 'profile') {
+            <div class="dropdown profile-menu">
+              <div class="pm-head">
+                <span class="profile-avatar lg">{{ userInitials() }}</span>
+                <span><strong>{{ userName() }}</strong><small>{{ user()?.email }}</small></span>
+              </div>
+              <button type="button" class="dd-item compact" (click)="go('/compte')"><i class="fa-regular fa-user"></i> Mon compte</button>
+              <button type="button" class="dd-item compact" (click)="go('/admin/parametres')"><i class="fa-solid fa-gear"></i> Paramètres</button>
+              <button type="button" class="dd-item compact" (click)="go('/')"><i class="fa-solid fa-store"></i> Voir la boutique</button>
+              <button type="button" class="dd-item compact danger" (click)="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="adm-content" id="contenu">
+      <router-outlet></router-outlet>
+    </main>
+
+    <footer class="adm-footer">
+      <p><strong>Nera Cosmétique</strong> <span>© {{ year }}. Tous droits réservés.</span></p>
+      <p class="foot-links"><span>Beauté</span><i></i><span>Naturel</span><i></i><span>Confiance</span></p>
+    </footer>
+  </div>
+</div>
