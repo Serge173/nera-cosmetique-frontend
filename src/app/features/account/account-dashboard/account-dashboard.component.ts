@@ -1,8 +1,11 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
 import { safeProductImageUrl } from '../../../shared/utils/placeholder-image';
-import { formatDate, formatNumber, formatPrice, initials, statusLabel, statusTone } from '../../admin/shared/admin-format';
+import { formatDate, formatNumber, formatPrice, statusLabel, statusTone } from '../../admin/shared/admin-format';
 import { AccountOverviewService } from '../shared/account-overview.service';
 import { effectivePrice } from '../shared/account.models';
 
@@ -11,7 +14,7 @@ const monthYear = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numer
 @Component({
   selector: 'app-account-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, UserAvatarComponent],
   templateUrl: './account-dashboard.component.html',
   styleUrl: './account-dashboard.component.css',
 })
@@ -26,7 +29,8 @@ export class AccountDashboardComponent implements OnInit {
     const u = this.data()?.user;
     return `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim() || 'Mon compte';
   });
-  readonly initials = computed(() => initials(this.fullName()));
+  private readonly user = toSignal(inject(AuthService).currentUser$, { initialValue: null });
+  readonly avatarUrl = computed(() => this.user()?.avatarUrl ?? null);
   readonly memberSince = computed(() => {
     const d = this.data()?.user.memberSince;
     return d ? monthYear.format(new Date(d)) : '';

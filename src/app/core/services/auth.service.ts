@@ -9,6 +9,7 @@ export interface User {
   firstName: string;
   lastName: string;
   phone?: string;
+  avatarUrl?: string | null;
   role: 'customer' | 'admin';
 }
 
@@ -58,6 +59,11 @@ export class AuthService {
   updateCurrentUser(user: User): void {
     this.storage.set('user', user);
     this.currentUserSubject.next(user);
+  }
+
+  patchCurrentUser(changes: Partial<User>): void {
+    const current = this.getCurrentUser();
+    if (current) this.updateCurrentUser({ ...current, ...changes });
   }
 
   getCurrentUser(): User | null {

@@ -6,7 +6,8 @@ import { Subject, debounceTime, distinctUntilChanged, filter, map, of, switchMap
 import { ApiService } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminSummary, AdminSummaryService } from '../shared/admin-summary.service';
-import { formatPrice, initials, statusLabel, statusTone } from '../shared/admin-format';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
+import { formatPrice, statusLabel, statusTone } from '../shared/admin-format';
 
 interface NavItem {
   label: string;
@@ -28,7 +29,7 @@ const EMPTY_RESULTS: SearchResults = { products: [], orders: [], customers: [] }
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, FormsModule],
+  imports: [RouterOutlet, RouterLink, FormsModule, UserAvatarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css',
 })
@@ -76,8 +77,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     const name = `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
     return name || 'Admin Nera';
   });
-  readonly userInitials = computed(() => initials(this.userName()));
-
   readonly summary = this.summaryService.summary;
   readonly notifTotal = computed(() => {
     const s = this.summary();

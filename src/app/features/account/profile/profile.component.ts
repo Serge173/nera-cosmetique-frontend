@@ -5,7 +5,9 @@ import { Subscription } from 'rxjs';
 import { AuthService, User } from '../../../core/services/auth.service';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { formatPrice, initials } from '../../admin/shared/admin-format';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
+import { prepareAvatar } from '../../../shared/utils/avatar-image';
+import { formatPrice } from '../../admin/shared/admin-format';
 import { AccountOverviewService } from '../shared/account-overview.service';
 
 type PasswordField = 'current' | 'new' | 'confirm';
@@ -15,7 +17,7 @@ const monthYear = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numer
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, UserAvatarComponent],
   template: `
     <div class="adm-page-head">
       <div>
@@ -26,7 +28,34 @@ const monthYear = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numer
 
     <div class="layout">
       <aside class="adm-card summary">
-        <div class="avatar">{{ initialsText() }}</div>
+        <div class="avatar-wrap">
+          <div class="avatar" [class.busy]="avatarBusy">
+            <app-user-avatar [url]="user?.avatarUrl" [name]="fullName()" />
+            @if (avatarBusy) { <span class="avatar-loader" aria-hidden="true"><span class="spinner"></span></span> }
+          </div>
+          <button type="button" class="avatar-cam" (click)="avatarInput.click()" [disabled]="avatarBusy"
+            [attr.aria-label]="user?.avatarUrl ? 'Changer la photo de profil' : 'Ajouter une photo de profil'">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+          <input #avatarInput type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden (change)="onAvatarSelected($event)" />
+        </div>
+        <div class="avatar-actions">
+          @if (confirmRemoveAvatar) {
+            <span>Supprimer la photo ?</span>
+            <button type="button" class="link-btn danger" (click)="removeAvatar()" [disabled]="avatarBusy">Oui</button>
+            <span class="sep" aria-hidden="true">·</span>
+            <button type="button" class="link-btn" (click)="confirmRemoveAvatar = false" [disabled]="avatarBusy">Non</button>
+          } @else {
+            <button type="button" class="link-btn" (click)="avatarInput.click()" [disabled]="avatarBusy">
+              {{ user?.avatarUrl ? 'Changer la photo' : 'Ajouter une photo' }}
+            </button>
+            @if (user?.avatarUrl) {
+              <span class="sep" aria-hidden="true">·</span>
+              <button type="button" class="link-btn danger" (click)="confirmRemoveAvatar = true" [disabled]="avatarBusy">Supprimer</button>
+            }
+          }
+        </div>
+        <small class="avatar-hint">JPG, PNG ou WebP. Recadrée automatiquement en carré.</small>
         <p class="name">{{ fullName() }}</p>
         <p class="email">{{ user?.email }}</p>
         @if (overview(); as o) {
@@ -157,12 +186,31 @@ const monthYear = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numer
     :host { display: block; }
     .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
     .summary { padding: 28px 22px 22px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; position: sticky; top: calc(var(--adm-topbar-h) + 20px); }
+    .avatar-wrap { position: relative; margin-bottom: 6px; }
     .avatar {
-      width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      position: relative; width: 104px; height: 104px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
       background: radial-gradient(circle at 30% 25%, #ffd9bd 0%, #ffb27a 45%, #ff6600 100%);
-      color: #fff; font-size: 2rem; font-weight: 700; margin-bottom: 10px;
+      color: #fff; font-size: 2rem; font-weight: 700;
       box-shadow: 0 0 0 6px #fff3ea, 0 10px 24px rgba(255, 102, 0, .25);
     }
+    .avatar-loader { position: absolute; inset: 0; border-radius: 50%; background: rgba(26, 20, 16, .45); display: flex; align-items: center; justify-content: center; }
+    .avatar-loader .spinner { width: 26px; height: 26px; border-width: 3px; }
+    .avatar-cam {
+      position: absolute; right: -2px; bottom: -2px; width: 36px; height: 36px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--adm-orange); color: #fff; font-size: .85rem; border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(255, 102, 0, .35); transition: transform .2s, background .2s;
+    }
+    .avatar-cam:hover:not(:disabled) { transform: scale(1.08); background: #e65c00; }
+    .avatar-cam:focus-visible { outline: 3px solid rgba(255, 102, 0, .35); outline-offset: 2px; }
+    .avatar-cam:disabled { opacity: .6; cursor: progress; }
+    .avatar-actions { display: flex; align-items: center; gap: 6px; margin: 8px 0 6px; font-size: .8rem; }
+    .link-btn { background: none; border: 0; padding: 2px 0; font-size: .8rem; font-weight: 600; color: var(--adm-orange); cursor: pointer; }
+    .link-btn:hover:not(:disabled) { text-decoration: underline; }
+    .link-btn:disabled { opacity: .5; cursor: progress; }
+    .link-btn.danger { color: #c53b4b; }
+    .sep { color: var(--adm-muted); }
+    .avatar-hint { font-size: .72rem; color: var(--adm-muted); margin-bottom: 10px; }
     .name { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--adm-ink); word-break: break-word; }
     .email { margin: 0 0 8px; font-size: .82rem; color: var(--adm-muted); word-break: break-all; }
     .facts { width: 100%; margin: 16px 0 14px; padding: 14px 0 0; border-top: 1px solid var(--adm-line); display: flex; flex-direction: column; gap: 10px; }
@@ -220,6 +268,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   user: User | null = null;
   profileModel = { firstName: '', lastName: '', phone: '' };
   profileSaving = false;
+  avatarBusy = false;
+  confirmRemoveAvatar = false;
 
   passwordFormModel = { currentPassword: '', newPassword: '', confirmPassword: '' };
   passwordLoading = false;
@@ -251,8 +301,53 @@ export class ProfileComponent implements OnInit, OnDestroy {
     return `${this.user?.firstName ?? ''} ${this.user?.lastName ?? ''}`.trim() || 'Mon compte';
   }
 
-  initialsText(): string {
-    return initials(this.fullName());
+  async onAvatarSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.avatarBusy) return;
+
+    this.avatarBusy = true;
+    let image: Blob;
+    try {
+      image = await prepareAvatar(file);
+    } catch (err) {
+      this.avatarBusy = false;
+      this.toast.error(err instanceof Error ? err.message : 'Impossible de préparer l’image.');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('file', image, image.type === 'image/webp' ? 'avatar.webp' : 'avatar.jpg');
+    this.api.post<{ avatarUrl: string }>('/account/avatar', form).subscribe({
+      next: ({ avatarUrl }) => {
+        this.avatarBusy = false;
+        this.confirmRemoveAvatar = false;
+        this.authService.patchCurrentUser({ avatarUrl });
+        this.toast.success('Votre photo de profil a été mise à jour.');
+      },
+      error: (err) => {
+        this.avatarBusy = false;
+        this.toast.error(err?.message ?? 'Impossible d’envoyer la photo.');
+      },
+    });
+  }
+
+  removeAvatar(): void {
+    if (this.avatarBusy || !this.user?.avatarUrl) return;
+    this.avatarBusy = true;
+    this.api.delete<{ avatarUrl: null }>('/account/avatar').subscribe({
+      next: () => {
+        this.avatarBusy = false;
+        this.confirmRemoveAvatar = false;
+        this.authService.patchCurrentUser({ avatarUrl: null });
+        this.toast.success('Votre photo de profil a été supprimée.');
+      },
+      error: (err) => {
+        this.avatarBusy = false;
+        this.toast.error(err?.message ?? 'Impossible de supprimer la photo.');
+      },
+    });
   }
 
   get profileDirty(): boolean {

@@ -106,14 +106,14 @@
 
         <div class="menu-wrap" data-menu>
           <button type="button" class="profile" (click)="toggleMenu('profile')" [attr.aria-expanded]="menu() === 'profile'" aria-label="Menu du compte">
-            <span class="profile-avatar">{{ userInitials() }}</span>
+            <span class="profile-avatar"><app-user-avatar [url]="user()?.avatarUrl" [name]="userName()" /></span>
             <span class="profile-name">{{ userName() }}</span>
             <i class="fa-solid fa-chevron-down profile-caret"></i>
           </button>
           @if (menu() === 'profile') {
             <div class="dropdown profile-menu">
               <div class="pm-head">
-                <span class="profile-avatar lg">{{ userInitials() }}</span>
+                <span class="profile-avatar lg"><app-user-avatar [url]="user()?.avatarUrl" [name]="userName()" /></span>
                 <span><strong>{{ userName() }}</strong><small>{{ user()?.email }}</small></span>
               </div>
               <button type="button" class="dd-item compact" (click)="go('/compte/profil')"><i class="fa-regular fa-user"></i> Mon profil</button>

@@ -24,7 +24,11 @@ function refreshAccessToken(auth: AuthService): Observable<string> {
 
 function toError(error: HttpErrorResponse, req: HttpRequest<unknown>): Error {
   let message = 'Une erreur est survenue';
-  if (error.error?.message && typeof error.error.message === 'string') {
+  if (error.status === 413) {
+    message = 'Fichier trop volumineux.';
+  } else if (error.status === 429) {
+    message = 'Trop de tentatives. Patientez une minute puis réessayez.';
+  } else if (error.error?.message && typeof error.error.message === 'string') {
     message = error.error.message;
   } else if (error.status === 401) {
     message = /\/auth\/(login|register)$/.test(req.url) ? 'Email ou mot de passe incorrect' : 'Non autorisé. Veuillez vous connecter.';

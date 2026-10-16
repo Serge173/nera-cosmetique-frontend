@@ -3,8 +3,10 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
-import { formatDateTime, initials, statusLabel, statusTone } from '../../admin/shared/admin-format';
+import { ApiService } from '../../../core/services/api.service';
+import { AuthService, User } from '../../../core/services/auth.service';
+import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
+import { formatDateTime, statusLabel, statusTone } from '../../admin/shared/admin-format';
 import { AccountOverviewService } from '../shared/account-overview.service';
 
 interface NavItem {
@@ -18,13 +20,14 @@ interface NavItem {
 @Component({
   selector: 'app-account-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, FormsModule],
+  imports: [RouterOutlet, RouterLink, FormsModule, UserAvatarComponent],
   templateUrl: './account-layout.component.html',
   styleUrl: './account-layout.component.css',
 })
 export class AccountLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private auth = inject(AuthService);
+  private api = inject(ApiService);
   private destroyRef = inject(DestroyRef);
   private overviewService = inject(AccountOverviewService);
 
@@ -57,8 +60,6 @@ export class AccountLayoutComponent implements OnInit, OnDestroy {
     const u = this.user();
     return `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim() || 'Mon compte';
   });
-  readonly userInitials = computed(() => initials(this.userName()));
-
   readonly overview = this.overviewService.overview;
   readonly activeOrders = computed(() => this.overview()?.activeOrders ?? []);
 
@@ -70,6 +71,15 @@ export class AccountLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.overviewService.refresh();
+    this.api.get<User>('/users/me').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (me) => this.auth.patchCurrentUser({
+        firstName: me.firstName,
+        lastName: me.lastName,
+        phone: me.phone,
+        avatarUrl: me.avatarUrl ?? null,
+      }),
+      error: () => {},
+    });
     let lastPath = this.router.url.split(/[?#]/)[0];
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))

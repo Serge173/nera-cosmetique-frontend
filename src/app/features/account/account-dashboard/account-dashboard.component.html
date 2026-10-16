@@ -30,8 +30,8 @@
           @if (d) {
             <div class="pc-body">
               <div class="pc-avatar">
-                <span>{{ initials() }}</span>
-                <a routerLink="/compte/profil" class="pc-edit" aria-label="Modifier mon profil"><i class="fa-solid fa-pen"></i></a>
+                <app-user-avatar [url]="avatarUrl()" [name]="fullName()" />
+                <a routerLink="/compte/profil" class="pc-edit" aria-label="Modifier mon profil et ma photo"><i class="fa-solid fa-pen"></i></a>
               </div>
               <div class="pc-info">
                 <p class="pc-name">
