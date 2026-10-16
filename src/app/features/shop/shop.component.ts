@@ -2,11 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { combineLatest } from 'rxjs';
+import { Observable, catchError, combineLatest, forkJoin, map, of, shareReplay, switchMap } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { Product, ProductFilter, ProductListResponse } from '../../models/product.model';
 import { CategoryWithCount } from '../../models/product.model';
+
+interface CategorySection {
+  category: CategoryWithCount;
+  products: Product[];
+  total: number;
+}
+
+const SECTION_SIZE = 6;
 
 @Component({
   selector: 'app-shop',
@@ -42,7 +50,9 @@ import { CategoryWithCount } from '../../models/product.model';
         <div class="shop-toolbar">
           <p class="results-count" aria-live="polite">
             @if (!loading && !errorMessage) {
-              @if (filters.category) {
+              @if (grouped) {
+                {{ total }} produit{{ total !== 1 ? 's' : '' }} dans {{ sections.length }} catégorie{{ sections.length !== 1 ? 's' : '' }}
+              } @else if (filters.category) {
                 {{ total }} produit{{ total !== 1 ? 's' : '' }} dans cette catégorie
               } @else {
                 {{ total }} produit{{ total !== 1 ? 's' : '' }} au total
@@ -162,7 +172,7 @@ import { CategoryWithCount } from '../../models/product.model';
                 <p>{{ errorMessage }}</p>
                 <button type="button" class="btn btn-primary" (click)="loadProducts()">Réessayer</button>
               </div>
-            } @else if (loading && products.length === 0) {
+            } @else if (loading && !hasContent) {
               <div class="products-grid products-grid--skeleton">
                 @for (i of skeletonCount; track i) {
                   <div class="product-skeleton" aria-hidden="true">
@@ -173,12 +183,40 @@ import { CategoryWithCount } from '../../models/product.model';
                   </div>
                 }
               </div>
-            } @else if (!loading && products.length === 0) {
+            } @else if (!loading && !hasContent) {
               <div class="state-message state-empty">
                 <p>Aucun produit ne correspond à vos critères.</p>
                 <button type="button" class="btn btn-outline" (click)="resetFilters()">
                   Voir tous les produits
                 </button>
+              </div>
+            } @else if (grouped) {
+              <div class="cat-sections">
+                @for (s of sections; track s.category.id) {
+                  <section class="cat-section" [attr.aria-labelledby]="'cat-' + s.category.id">
+                    <header class="cat-section-head">
+                      <div class="cat-section-title">
+                        <h2 [id]="'cat-' + s.category.id">{{ s.category.name }}</h2>
+                        <span class="cat-section-count">{{ s.total }} produit{{ s.total !== 1 ? 's' : '' }}</span>
+                      </div>
+                      <a [routerLink]="['/boutique', s.category.slug]" class="cat-see-all">
+                        Voir tout <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    </header>
+                    <div class="products-grid products-grid--section">
+                      @for (product of s.products; track product.id) {
+                        <app-product-card [product]="product" />
+                      }
+                    </div>
+                    @if (s.total > s.products.length) {
+                      <div class="cat-section-more">
+                        <a [routerLink]="['/boutique', s.category.slug]" class="btn btn-outline">
+                          Voir les {{ s.total }} produits {{ s.category.name }}
+                        </a>
+                      </div>
+                    }
+                  </section>
+                }
               </div>
             } @else {
               <div class="products-grid">
@@ -319,10 +357,6 @@ import { CategoryWithCount } from '../../models/product.model';
       font-size: 1rem;
       color: var(--text-light);
       margin: 0;
-    }
-
-    .shop-body {
-      padding: 0;
     }
 
     .shop-toolbar {
@@ -505,6 +539,80 @@ import { CategoryWithCount } from '../../models/product.model';
       gap: 24px;
     }
 
+    .cat-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .cat-section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+      position: relative;
+    }
+
+    .cat-section-head::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 64px;
+      height: 2px;
+      background: var(--primary-color);
+    }
+
+    .cat-section-title {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .cat-section-title h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .cat-section-count {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    .cat-see-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .cat-see-all:hover {
+      text-decoration: underline;
+    }
+
+    .products-grid--section {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cat-section-more {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
     .products-grid--skeleton .product-skeleton {
       background: #fff;
       border-radius: 12px;
@@ -685,6 +793,26 @@ import { CategoryWithCount } from '../../models/product.model';
       .products-grid {
         gap: 8px;
       }
+      .cat-sections {
+        gap: 28px;
+      }
+      .cat-section-head {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+      }
+      .cat-section-title h2 {
+        font-size: 1.1rem;
+      }
+      .cat-section-count {
+        font-size: 0.75rem;
+      }
+      .cat-see-all {
+        font-size: 0.8rem;
+      }
+      .cat-section-more .btn {
+        width: 100%;
+        text-align: center;
+      }
       .skeleton-line {
         height: 10px;
         margin: 8px 8px 0;
@@ -744,7 +872,10 @@ import { CategoryWithCount } from '../../models/product.model';
 })
 export class ShopComponent implements OnInit {
   products: Product[] = [];
+  sections: CategorySection[] = [];
   categories: CategoryWithCount[] = [];
+  private categories$!: Observable<CategoryWithCount[]>;
+  private requestId = 0;
   loading = false;
   filtersOpen = false;
   errorMessage: string | null = null;
@@ -765,6 +896,15 @@ export class ShopComponent implements OnInit {
     if (!this.filters.category) return null;
     const cat = this.categories.find(c => c.id === this.filters.category);
     return cat?.name ?? null;
+  }
+
+  /** Vue « Toutes les catégories » : une section par catégorie. */
+  get grouped(): boolean {
+    return this.filters.category == null && !this.filters.q;
+  }
+
+  get hasContent(): boolean {
+    return this.grouped ? this.sections.length > 0 : this.products.length > 0;
   }
 
   get visiblePages(): number[] {
@@ -809,21 +949,32 @@ export class ShopComponent implements OnInit {
     });
   }
 
-  loadProducts(): void {
-    this.loading = true;
-    this.errorMessage = null;
-    const params: Record<string, unknown> = {
-      page: this.filters.page ?? 1,
-      limit: this.filters.limit ?? 12,
-      sort: this.sortBy,
-    };
-    if (this.filters.category != null) params['category'] = this.filters.category;
+  private baseParams(): Record<string, unknown> {
+    const params: Record<string, unknown> = { sort: this.sortBy };
     if (this.filters.minPrice != null) params['minPrice'] = this.filters.minPrice;
     if (this.filters.maxPrice != null) params['maxPrice'] = this.filters.maxPrice;
+    return params;
+  }
+
+  loadProducts(): void {
+    const id = ++this.requestId;
+    this.loading = true;
+    this.errorMessage = null;
+    if (this.grouped) {
+      this.loadSections(id);
+      return;
+    }
+    const params: Record<string, unknown> = {
+      ...this.baseParams(),
+      page: this.filters.page ?? 1,
+      limit: this.filters.limit ?? 12,
+    };
+    if (this.filters.category != null) params['category'] = this.filters.category;
     if (this.filters.q) params['q'] = this.filters.q;
 
     this.api.get<ProductListResponse>('/products', params).subscribe({
       next: response => {
+        if (id !== this.requestId) return;
         this.products = response.products;
         this.currentPage = response.page;
         this.totalPages = response.totalPages;
@@ -831,17 +982,53 @@ export class ShopComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
+        if (id !== this.requestId) return;
         this.errorMessage = 'Impossible de charger les produits. Vérifiez votre connexion.';
         this.loading = false;
       },
     });
   }
 
+  private loadSections(id: number): void {
+    const params = { ...this.baseParams(), page: 1, limit: SECTION_SIZE };
+    this.categories$
+      .pipe(
+        switchMap(cats => {
+          const withProducts = cats.filter(c => c.productCount > 0);
+          if (!withProducts.length) return of<CategorySection[]>([]);
+          return forkJoin(
+            withProducts.map(category =>
+              this.api
+                .get<ProductListResponse>('/products', { ...params, category: category.id })
+                .pipe(map(r => ({ category, products: r.products, total: r.total }))),
+            ),
+          );
+        }),
+      )
+      .subscribe({
+        next: sections => {
+          if (id !== this.requestId) return;
+          this.sections = sections.filter(s => s.products.length > 0);
+          this.total = this.sections.reduce((sum, s) => sum + s.total, 0);
+          this.currentPage = 1;
+          this.totalPages = 1;
+          this.loading = false;
+        },
+        error: () => {
+          if (id !== this.requestId) return;
+          this.errorMessage = 'Impossible de charger les produits. Vérifiez votre connexion.';
+          this.loading = false;
+        },
+      });
+  }
+
   loadCategories(): void {
-    this.api.get<CategoryWithCount[]>('/categories/with-counts').subscribe({
-      next: cats => (this.categories = cats ?? []),
-      error: () => (this.categories = []),
-    });
+    this.categories$ = this.api.get<CategoryWithCount[]>('/categories/with-counts').pipe(
+      map(cats => cats ?? []),
+      catchError(() => of<CategoryWithCount[]>([])),
+      shareReplay(1),
+    );
+    this.categories$.subscribe(cats => (this.categories = cats));
   }
 
   onCategoryChange(): void {
