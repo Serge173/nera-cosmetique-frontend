@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, tap, map, of } from 'rxjs';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
@@ -31,6 +31,14 @@ export interface Cart {
 export class CartService {
   private cartSubject = new BehaviorSubject<Cart>(this.getInitialCart());
   public cart$ = this.cartSubject.asObservable();
+
+  /** Remise validée par le serveur pour un code et un sous-total donnés. */
+  private couponState: { code: string; subtotal: number; discount: number } | null = null;
+  private couponCheck?: Subscription;
+  private couponCheckKey: string | null = null;
+  private couponRejectedSubject = new Subject<{ code: string; message: string }>();
+  /** Émis quand un code enregistré n'est plus applicable au panier (minimum non atteint, expiré…). */
+  public couponRejected$ = this.couponRejectedSubject.asObservable();
 
   constructor(
     private api: ApiService,
@@ -120,9 +128,8 @@ export class CartService {
       tap((response) => {
         if (response.valid === true) {
           this.storage.set(COUPON_KEY, normalized);
-          const cart = this.getCartValue();
-          cart.discount = response.discount ?? 0;
-          this.recalculateCart(cart);
+          this.couponState = { code: normalized, subtotal: orderAmount, discount: this.capDiscount(response.discount, orderAmount) };
+          this.updateCart(this.getCartValue());
         }
       }),
       map((response) => ({
@@ -143,11 +150,9 @@ export class CartService {
 
   clearCoupon(): void {
     this.storage.remove(COUPON_KEY);
-    const cart = this.getCartValue();
-    if (cart.discount) {
-      cart.discount = 0;
-      this.recalculateCart(cart);
-    }
+    this.couponState = null;
+    this.cancelCouponCheck();
+    this.updateCart(this.getCartValue());
   }
 
   getItemCount(): number {
@@ -166,10 +171,60 @@ export class CartService {
   }
 
   private updateCart(cart: Cart): void {
+    cart.discount = this.resolveDiscount(cart);
+    cart.total = Math.max(0, cart.subtotal - cart.discount) + (Number(cart.shipping) || 0);
     this.cartSubject.next(cart);
     if (!this.auth.isAuthenticated()) {
       this.storage.set('cart', cart);
     }
+  }
+
+  /** La remise suit le sous-total : elle est revalidée par le serveur dès que le panier change. */
+  private resolveDiscount(cart: Cart): number {
+    const code = this.getCouponCode();
+    if (!code || !cart.items.length || cart.subtotal <= 0) {
+      this.cancelCouponCheck();
+      return 0;
+    }
+    const state = this.couponState;
+    if (state && state.code === code && state.subtotal === cart.subtotal) return state.discount;
+    this.revalidateCoupon(code, cart.subtotal);
+    return state && state.code === code ? Math.min(state.discount, cart.subtotal) : 0;
+  }
+
+  private revalidateCoupon(code: string, subtotal: number): void {
+    const key = `${code}|${subtotal}`;
+    if (this.couponCheckKey === key) return;
+    this.cancelCouponCheck();
+    this.couponCheckKey = key;
+    this.couponCheck = this.validateCoupon(code, subtotal).subscribe({
+      next: (res) => {
+        this.couponCheckKey = null;
+        if (this.getCouponCode() !== code) return;
+        if (res.valid === true) {
+          this.couponState = { code, subtotal, discount: this.capDiscount(res.discount, subtotal) };
+        } else {
+          this.couponState = null;
+          this.storage.remove(COUPON_KEY);
+          this.couponRejectedSubject.next({ code, message: res.message || 'Code invalide' });
+        }
+        this.updateCart(this.getCartValue());
+      },
+      error: () => {
+        this.couponCheckKey = null;
+      },
+    });
+  }
+
+  private cancelCouponCheck(): void {
+    this.couponCheck?.unsubscribe();
+    this.couponCheck = undefined;
+    this.couponCheckKey = null;
+  }
+
+  private capDiscount(discount: unknown, subtotal: number): number {
+    const n = Number(discount);
+    return Number.isFinite(n) && n > 0 ? Math.min(n, subtotal) : 0;
   }
 
   private recalculateCart(cart: Cart): void {
@@ -181,7 +236,6 @@ export class CartService {
       }
       return sum + price * qty;
     }, 0);
-    cart.total = cart.subtotal + cart.shipping - cart.discount;
     this.updateCart(cart);
   }
 

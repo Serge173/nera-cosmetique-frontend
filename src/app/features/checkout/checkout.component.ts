@@ -366,7 +366,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   couponCode: string | null = null;
   discount = 0;
   couponMessage = '';
-  private validatedFor: number | null = null;
   private subs = new Subscription();
 
   constructor(
@@ -377,10 +376,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.couponCode = this.cartService.getCouponCode();
     this.subs.add(this.cartService.getCart().subscribe(cart => {
       this.cart = cart;
-      this.revalidateCoupon();
+      this.couponCode = this.cartService.getCouponCode();
+      this.discount = this.couponCode ? Math.min(Number(cart.discount) || 0, cart.subtotal) : 0;
+    }));
+    this.subs.add(this.cartService.couponRejected$.subscribe(({ code, message }) => {
+      this.couponMessage = `Code ${code} non appliqué : ${message}`;
     }));
     this.subs.add(this.api.get<DeliveryOption[]>('/orders/delivery-options').subscribe({
       next: (options) => {
@@ -443,35 +445,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       },
       error: () => {},
     }));
-  }
-
-  private revalidateCoupon() {
-    if (!this.couponCode) {
-      this.discount = 0;
-      return;
-    }
-    const subtotal = this.cart.subtotal;
-    if (this.validatedFor === subtotal) return;
-    this.validatedFor = subtotal;
-    if (!this.cart.items.length) return;
-    this.cartService.validateCoupon(this.couponCode, subtotal).subscribe({
-      next: (res) => {
-        if (this.validatedFor !== subtotal) return;
-        if (res.valid) {
-          this.discount = Math.min(Number(res.discount) || 0, subtotal);
-          this.couponMessage = '';
-        } else {
-          this.discount = 0;
-          this.couponMessage = `Code ${this.couponCode} non appliqué : ${res.message}`;
-          this.couponCode = null;
-          this.cartService.clearCoupon();
-        }
-      },
-      error: () => {
-        this.discount = 0;
-        this.couponMessage = 'Le code promo n’a pas pu être vérifié ; il sera contrôlé à la validation.';
-      },
-    });
   }
 
   submitOrder() {

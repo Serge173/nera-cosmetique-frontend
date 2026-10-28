@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -68,11 +69,11 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
                 </div>
                 <div class="summary-row">
                   <span>Livraison</span>
-                  <span>{{ cart.shipping | price }}</span>
+                  <span class="muted-note">{{ cart.shipping > 0 ? (cart.shipping | price) : 'Calculée à l’étape suivante' }}</span>
                 </div>
                 @if (cart.discount > 0) {
                   <div class="summary-row discount">
-                    <span>Réduction</span>
+                    <span>Réduction{{ appliedCode ? ' (' + appliedCode + ')' : '' }}</span>
                     <span>-{{ cart.discount | price }}</span>
                   </div>
                 }
@@ -204,6 +205,11 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns
     .summary-row.discount {
       color: var(--success);
     }
+    .muted-note {
+      color: var(--text-light, #6b7280);
+      font-size: 13px;
+      text-align: right;
+    }
     .btn-large {
       width: 100%;
       padding: 16px;
@@ -264,11 +270,17 @@ export class CartComponent implements OnInit {
   couponCode = '';
   placeholderImage = PLACEHOLDER_IMAGE;
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private cartService: CartService,
     private router: Router,
     private toast: ToastService,
   ) {}
+
+  get appliedCode(): string | null {
+    return this.cartService.getCouponCode();
+  }
 
   getItemImage(item: CartItem): string {
     return safeThumbImageUrl(item.productImage);
@@ -276,23 +288,19 @@ export class CartComponent implements OnInit {
 
   ngOnInit() {
     this.cart = this.cartService.getCartValue();
-    this.cartService.getCart().subscribe(cart => {
+    this.cartService.getCart().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(cart => {
       this.cart = cart;
     });
+    this.cartService.couponRejected$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ code, message }) => {
+      this.couponCode = '';
+      this.couponSuccess = false;
+      this.couponMessage = `Code ${code} retiré : ${message}`;
+    });
     const saved = this.cartService.getCouponCode();
-    if (saved && this.cart.items.length) {
+    if (saved) {
       this.couponCode = saved;
-      this.cartService.applyCoupon(saved).subscribe({
-        next: (res) => {
-          this.couponSuccess = res.success;
-          this.couponMessage = res.success ? res.message : '';
-          if (!res.success) {
-            this.couponCode = '';
-            this.cartService.clearCoupon();
-          }
-        },
-        error: () => {},
-      });
+      this.couponSuccess = true;
+      this.couponMessage = 'Code appliqué';
     }
   }
 
