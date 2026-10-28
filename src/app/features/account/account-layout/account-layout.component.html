@@ -70,7 +70,7 @@
           type="search"
           name="q"
           [(ngModel)]="searchTerm"
-          placeholder="Rechercher un produit, une marque..."
+          [placeholder]="narrow() ? 'Rechercher…' : 'Rechercher un produit, une marque...'"
           autocomplete="off"
           aria-label="Rechercher dans la boutique"
           maxlength="80"

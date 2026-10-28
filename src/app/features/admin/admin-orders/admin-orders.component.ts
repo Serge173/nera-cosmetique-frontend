@@ -9,6 +9,7 @@ import { AdminSummaryService } from '../shared/admin-summary.service';
 import {
   ORDER_STATUS_LIST,
   OrderStatus,
+  deliveryLabel,
   downloadCsv,
   formatDate,
   formatDateTime,
@@ -94,6 +95,7 @@ export class AdminOrdersComponent implements OnInit {
   readonly statusLabel = statusLabel;
   readonly statusTone = statusTone;
   readonly paymentLabel = paymentLabel;
+  readonly deliveryLabel = deliveryLabel;
 
   ngOnInit(): void {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {

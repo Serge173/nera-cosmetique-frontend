@@ -643,6 +643,9 @@
     font-weight: 600;
     color: var(--adm-ink);
   }
+  .adm-shell .adm-content table:not(.no-stack) td:first-child:not(.cell-media) .muted,
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media + td .muted,
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media + td [class$="-desc"] { font-weight: 400; }
   .adm-shell .adm-content table:not(.no-stack) td:first-child:not(.cell-media)::before,
   .adm-shell .adm-content table:not(.no-stack) td.cell-media + td::before,
   .adm-shell .adm-content table:not(.no-stack) td.cell-media::before,

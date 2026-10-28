@@ -120,7 +120,7 @@ const emptyForm = (): CouponForm => ({
                         }
                       </div>
                     </td>
-                    <td class="muted nowrap">{{ validityText(c) }}</td>
+                    <td class="muted">{{ validityText(c) }}</td>
                     <td><span class="adm-badge dot {{ stateInfo(c).tone }}">{{ stateInfo(c).label }}</span></td>
                     <td class="actions">
                       <div class="row-actions">

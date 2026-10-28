@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { AdminSummary, AdminSummaryService } from '../shared/admin-summary.service';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
 import { formatPrice, statusLabel, statusTone } from '../shared/admin-format';
+import { mediaQuery } from '../../../shared/utils/media-query';
 
 interface NavItem {
   label: string;
@@ -59,18 +60,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   private tableObserver?: MutationObserver;
   readonly summaryService = inject(AdminSummaryService);
 
-  readonly searchPlaceholder = signal('Rechercher un produit, une commande, un client...');
+  readonly narrow = mediaQuery('(max-width: 720px)');
 
   constructor() {
-    afterNextRender(() => {
-      this.watchTables();
-      const narrow = window.matchMedia('(max-width: 720px)');
-      const apply = () =>
-        this.searchPlaceholder.set(narrow.matches ? 'Rechercher…' : 'Rechercher un produit, une commande, un client...');
-      apply();
-      narrow.addEventListener('change', apply);
-      this.destroyRef.onDestroy(() => narrow.removeEventListener('change', apply));
-    });
+    afterNextRender(() => this.watchTables());
   }
 
   readonly mainNav: NavItem[] = [

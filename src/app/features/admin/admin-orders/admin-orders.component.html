@@ -179,7 +179,7 @@
         <dl class="kv">
           <dt>Adresse</dt>
           <dd>{{ addressOf(o) }}</dd>
-          @if (o.deliveryMethod) { <dt>Mode</dt><dd>{{ o.deliveryMethod }}</dd> }
+          @if (o.deliveryMethod) { <dt>Mode</dt><dd>{{ deliveryLabel(o.deliveryMethod) }}</dd> }
           <dt>Paiement</dt><dd>{{ paymentLabel(o.paymentMethod) }}</dd>
           @if (o.notes) { <dt>Note</dt><dd>{{ o.notes }}</dd> }
         </dl>

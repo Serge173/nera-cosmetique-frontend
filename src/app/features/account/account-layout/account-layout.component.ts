@@ -9,6 +9,7 @@ import { SiteService } from '../../../core/services/site.service';
 import { UserAvatarComponent } from '../../../shared/components/user-avatar/user-avatar.component';
 import { formatDateTime, statusLabel, statusTone } from '../../admin/shared/admin-format';
 import { AccountOverviewService } from '../shared/account-overview.service';
+import { mediaQuery } from '../../../shared/utils/media-query';
 
 interface NavItem {
   label: string;
@@ -52,6 +53,7 @@ export class AccountLayoutComponent implements OnInit, OnDestroy {
     { initialValue: this.router.url },
   );
 
+  readonly narrow = mediaQuery('(max-width: 720px)');
   readonly navOpen = signal(false);
   readonly menu = signal<'notif' | 'profile' | null>(null);
   readonly year = new Date().getFullYear();

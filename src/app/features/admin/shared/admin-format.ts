@@ -39,6 +39,16 @@ export function paymentLabel(method: string | null | undefined): string {
   return PAYMENT_LABELS[method] ?? method.replace(/_/g, ' ');
 }
 
+const DELIVERY_LABELS: Record<string, string> = {
+  abidjan: 'Livraison à Abidjan',
+  interior: "Livraison à l'intérieur du pays",
+};
+
+export function deliveryLabel(method: string | null | undefined): string {
+  if (!method) return '—';
+  return DELIVERY_LABELS[method] ?? method.replace(/_/g, ' ');
+}
+
 const priceFormatter = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
 
 export function formatPrice(value: number | string | null | undefined): string {
