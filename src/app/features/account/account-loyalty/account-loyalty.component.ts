@@ -28,7 +28,7 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
     <div class="adm-page-head">
       <div>
         <h1>Mes points fidélité</h1>
-        <p>Cumulez des points à chaque commande et transformez-les en bons de réduction.</p>
+        <p>Gagnez des points dès l'inscription et à chaque commande, puis transformez-les en codes promo.</p>
       </div>
     </div>
 
@@ -65,28 +65,32 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
         <section class="adm-card redeem" aria-labelledby="redeem-title">
           <h2 id="redeem-title" class="title"><i class="fa-solid fa-gift"></i> Convertir mes points</h2>
           @if (d.points >= d.rules.minRedeem) {
-            <p class="muted">Choisissez le nombre de points à convertir en bon de réduction (par tranche de {{ d.rules.redeemStep }}).</p>
+            <p class="muted">
+              Choisissez le nombre de points à transformer en code promo : chaque point vaut {{ formatPrice(d.rules.pointValue) }}@if (d.rules.redeemStep > 1) { (par tranche de {{ d.rules.redeemStep }})}.
+            </p>
             <div class="stepper">
               <button type="button" class="adm-icon-btn" (click)="step(-1)" [disabled]="amount() <= d.rules.minRedeem" aria-label="Diminuer"><i class="fa-solid fa-minus"></i></button>
-              <div class="amount">
-                <strong>{{ formatNumber(amount()) }}</strong>
+              <label class="amount">
+                <input type="number" inputmode="numeric" [min]="d.rules.minRedeem" [max]="maxRedeem()" [step]="d.rules.redeemStep"
+                       [value]="amount()" (input)="setAmount($any($event.target), false)" (change)="setAmount($any($event.target), true)"
+                       aria-label="Nombre de points à convertir" />
                 <small>points</small>
-              </div>
+              </label>
               <button type="button" class="adm-icon-btn" (click)="step(1)" [disabled]="amount() + d.rules.redeemStep > d.points" aria-label="Augmenter"><i class="fa-solid fa-plus"></i></button>
             </div>
-            <p class="equals">= bon de <strong>{{ formatPrice(amount() * d.rules.pointValue) }}</strong></p>
+            <p class="equals">= code promo de <strong>{{ formatPrice(amount() * d.rules.pointValue) }}</strong> de réduction</p>
             <div class="quick">
               <button type="button" class="adm-chip" [class.active]="amount() === d.rules.minRedeem" (click)="amount.set(d.rules.minRedeem)">Minimum</button>
               <button type="button" class="adm-chip" [class.active]="amount() === maxRedeem()" (click)="amount.set(maxRedeem())">Tout convertir</button>
             </div>
             <button type="button" class="adm-btn block" (click)="redeem()" [disabled]="redeeming()">
-              @if (redeeming()) { <i class="fa-solid fa-spinner fa-spin"></i> Génération du bon… } @else { <i class="fa-solid fa-ticket"></i> Obtenir mon bon }
+              @if (redeeming()) { <i class="fa-solid fa-spinner fa-spin"></i> Génération du code… } @else { <i class="fa-solid fa-ticket"></i> Générer mon code promo }
             </button>
-            <small class="fine">Bon à usage unique, valable {{ d.rules.voucherValidityDays }} jours, utilisable uniquement avec votre compte.</small>
+            <small class="fine">Code à usage unique, valable {{ d.rules.voucherValidityDays }} jours, utilisable uniquement avec votre compte.</small>
           } @else {
             <div class="locked">
               <span class="lock-icon"><i class="fa-solid fa-lock"></i></span>
-              <p>Il vous faut au moins <strong>{{ d.rules.minRedeem }} points</strong> pour obtenir votre premier bon de {{ formatPrice(d.rules.minRedeem * d.rules.pointValue) }}.</p>
+              <p>Il vous faut au moins <strong>{{ d.rules.minRedeem }} point{{ d.rules.minRedeem > 1 ? 's' : '' }}</strong> pour obtenir un code promo de {{ formatPrice(d.rules.minRedeem * d.rules.pointValue) }}.</p>
               <div class="progress light"><span [style.width.%]="(d.points / d.rules.minRedeem) * 100"></span></div>
               <small>Encore {{ d.rules.minRedeem - d.points }} points — soit environ {{ formatPrice((d.rules.minRedeem - d.points) * d.rules.amountPerPoint) }} d'achats.</small>
               <a routerLink="/boutique" class="adm-btn adm-btn-soft adm-btn-sm">Découvrir la boutique</a>
@@ -99,8 +103,8 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
         <div class="adm-card fresh" role="status">
           <span class="fresh-icon"><i class="fa-solid fa-champagne-glasses"></i></span>
           <div>
-            <strong>Votre bon de {{ formatPrice(v.value) }} est prêt !</strong>
-            <p>Saisissez ce code dans votre panier lors de votre prochaine commande.</p>
+            <strong>Votre code promo de {{ formatPrice(v.value) }} est prêt !</strong>
+            <p>Saisissez-le dans votre panier lors de votre prochaine commande (en étant connecté à votre compte).</p>
           </div>
           <button type="button" class="code big" (click)="copy(v.code)" [attr.aria-label]="'Copier le code ' + v.code">{{ v.code }} <i class="fa-regular fa-copy"></i></button>
         </div>
@@ -128,7 +132,7 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
 
       <div class="cols">
         <section class="adm-card pad" aria-labelledby="vouchers-title">
-          <h2 id="vouchers-title" class="title">Mes bons de réduction</h2>
+          <h2 id="vouchers-title" class="title">Mes codes promo fidélité</h2>
           @if (d.vouchers.length) {
             <ul class="vouchers">
               @for (v of d.vouchers; track v.code) {
@@ -155,7 +159,7 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
           } @else {
             <div class="adm-empty compact">
               <i class="fa-solid fa-ticket"></i>
-              <p>Vous n'avez pas encore converti de points.</p>
+              <p>Vous n'avez pas encore généré de code promo.</p>
             </div>
           }
         </section>
@@ -164,13 +168,21 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
           <h2 id="history-title" class="title">Historique des points</h2>
           @if (d.history.length) {
             <ul class="history">
-              @for (h of d.history; track h.orderId) {
+              @for (h of d.history; track $index) {
                 <li>
-                  <span class="h-icon"><i class="fa-solid fa-plus"></i></span>
-                  <a [routerLink]="['/compte/commandes', h.orderId]" class="h-main">
-                    <strong>Commande #{{ h.orderNumber }}</strong>
-                    <small>{{ formatDate(h.date) }} • {{ formatPrice(h.amount) }}</small>
-                  </a>
+                  @if (h.type === 'welcome') {
+                    <span class="h-icon"><i class="fa-solid fa-gift"></i></span>
+                    <div class="h-main">
+                      <strong>Bonus de bienvenue</strong>
+                      <small>{{ formatDate(h.date) }} • Création de votre compte</small>
+                    </div>
+                  } @else {
+                    <span class="h-icon"><i class="fa-solid fa-plus"></i></span>
+                    <a [routerLink]="['/compte/commandes', h.orderId]" class="h-main">
+                      <strong>Commande #{{ h.orderNumber }}</strong>
+                      <small>{{ formatDate(h.date) }} • {{ formatPrice(h.amount) }}</small>
+                    </a>
+                  }
                   <span class="h-pts">+{{ h.points }} pts</span>
                 </li>
               }
@@ -187,11 +199,11 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
       <section class="adm-card pad rules" aria-labelledby="rules-title">
         <h2 id="rules-title" class="title">Comment ça marche ?</h2>
         <ol class="how">
-          <li><span>1</span><div><strong>Commandez</strong><p>Gagnez 1 point pour chaque {{ formatPrice(d.rules.amountPerPoint) }} d'achats, dès que votre commande est livrée.</p></div></li>
-          <li><span>2</span><div><strong>Cumulez</strong><p>Chaque point vaut {{ formatPrice(d.rules.pointValue) }}. Plus vous cumulez, plus votre niveau augmente.</p></div></li>
-          <li><span>3</span><div><strong>Profitez</strong><p>Dès {{ d.rules.minRedeem }} points, obtenez un bon à utiliser sur votre prochaine commande.</p></div></li>
+          <li><span>1</span><div><strong>Inscrivez-vous et commandez</strong><p>{{ d.rules.welcomeBonus }} points offerts à la création de votre compte, puis 1 point pour chaque {{ formatPrice(d.rules.amountPerPoint) }} d'achats, dès que votre commande est livrée.</p></div></li>
+          <li><span>2</span><div><strong>Cumulez</strong><p>Chaque point vaut {{ formatPrice(d.rules.pointValue) }} de réduction : {{ d.rules.welcomeBonus }} points = {{ formatPrice(d.rules.welcomeBonus * d.rules.pointValue) }}. Plus vous cumulez, plus votre niveau augmente.</p></div></li>
+          <li><span>3</span><div><strong>Profitez</strong><p>Dès {{ d.rules.minRedeem }} point{{ d.rules.minRedeem > 1 ? 's' : '' }}, générez un code promo du montant de vos points et utilisez-le sur votre prochaine commande.</p></div></li>
         </ol>
-        <p class="fine">Les points sont calculés sur le montant des articles, hors frais de livraison et après réductions. Un bon non utilisé avant expiration vous rend ses points.</p>
+        <p class="fine">Les points sont calculés sur le montant des articles, hors frais de livraison et après réductions. Un code promo non utilisé avant expiration vous rend ses points.</p>
       </section>
     }
   `,
@@ -217,7 +229,9 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
     .muted { margin: 0 0 16px; font-size: .85rem; color: var(--adm-muted); }
     .stepper { display: flex; align-items: center; justify-content: center; gap: 18px; }
     .amount { min-width: 120px; text-align: center; display: flex; flex-direction: column; }
-    .amount strong { font-size: 2rem; color: var(--adm-ink); line-height: 1.1; }
+    .amount input { width: 120px; border: 0; border-bottom: 2px solid var(--adm-line); background: transparent; text-align: center; font: inherit; font-size: 2rem; font-weight: 700; color: var(--adm-ink); line-height: 1.1; padding: 0 0 2px; -moz-appearance: textfield; appearance: textfield; }
+    .amount input::-webkit-outer-spin-button, .amount input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .amount input:focus { outline: none; border-bottom-color: var(--adm-orange); }
     .amount small { color: var(--adm-muted); font-size: .78rem; }
     .equals { text-align: center; margin: 10px 0 12px; color: var(--adm-text); }
     .equals strong { color: var(--adm-orange-dark); }
@@ -294,7 +308,7 @@ export class AccountLoyaltyComponent implements OnInit {
   readonly data = signal<LoyaltyDetails | null>(null);
   readonly loading = signal(true);
   readonly error = signal(false);
-  readonly amount = signal(100);
+  readonly amount = signal(0);
   readonly redeeming = signal(false);
   readonly lastVoucher = signal<{ code: string; value: number } | null>(null);
 
@@ -318,7 +332,8 @@ export class AccountLoyaltyComponent implements OnInit {
     this.api.get<LoyaltyDetails>('/account/loyalty').subscribe({
       next: (d) => {
         this.data.set(d);
-        this.amount.set(Math.max(d.rules.minRedeem, Math.min(this.amount(), this.maxRedeem())));
+        const current = this.amount();
+        this.amount.set(Math.max(d.rules.minRedeem, current > 0 ? Math.min(current, this.maxRedeem()) : this.maxRedeem()));
         this.loading.set(false);
       },
       error: () => {
@@ -342,6 +357,19 @@ export class AccountLoyaltyComponent implements OnInit {
     const next = this.amount() + direction * d.rules.redeemStep;
     if (next < d.rules.minRedeem || next > d.points) return;
     this.amount.set(next);
+  }
+
+  /** Saisie libre : la valeur est ramenée dans les bornes autorisées à la validation du champ. */
+  setAmount(input: HTMLInputElement, commit: boolean): void {
+    const d = this.data();
+    if (!d) return;
+    const n = Math.floor(Number(input.value));
+    const inRange = input.value !== '' && Number.isFinite(n) && n >= d.rules.minRedeem && n <= this.maxRedeem();
+    if (!commit && !inRange) return;
+    const base = Number.isFinite(n) && input.value !== '' ? n : d.rules.minRedeem;
+    const stepped = Math.floor(base / d.rules.redeemStep) * d.rules.redeemStep;
+    this.amount.set(Math.min(this.maxRedeem(), Math.max(d.rules.minRedeem, stepped)));
+    if (commit) input.value = String(this.amount());
   }
 
   redeem(): void {

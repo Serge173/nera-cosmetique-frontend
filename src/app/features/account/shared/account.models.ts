@@ -72,8 +72,8 @@ export interface LoyaltyDetails {
   lifetime: number;
   tier: LoyaltyTier;
   tiers: { key: string; label: string; min: number }[];
-  rules: { amountPerPoint: number; pointValue: number; minRedeem: number; redeemStep: number; voucherValidityDays: number };
-  history: { orderId: string; orderNumber: string; date: string; amount: number; points: number }[];
+  rules: { amountPerPoint: number; pointValue: number; welcomeBonus: number; minRedeem: number; redeemStep: number; voucherValidityDays: number };
+  history: { type: 'order' | 'welcome'; orderId: string | null; orderNumber: string | null; date: string; amount: number; points: number }[];
   vouchers: LoyaltyVoucher[];
 }
 
