@@ -58,6 +58,7 @@ import { SiteService } from '../../../core/services/site.service';
         </div>
         <div class="footer-bottom">
           <p>&copy; {{ currentYear }} {{ s.storeName }}. Tous droits réservés.</p>
+          <p class="footer-credit">by kdigit (<a href="tel:+2250708967624">+225 0708967624</a>)</p>
         </div>
       </div>
       @if (site.whatsappUrl()) {
@@ -133,10 +134,51 @@ import { SiteService } from '../../../core/services/site.service';
       height: 100%;
     }
     .footer-bottom {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: end;
+      gap: 8px 16px;
       text-align: center;
       padding-top: 20px;
       border-top: 1px solid #444;
       color: #ccc;
+    }
+    .footer-bottom > p {
+      margin: 0;
+      grid-column: 2;
+    }
+    .footer-bottom > .footer-credit {
+      grid-column: 3;
+      justify-self: end;
+      text-align: right;
+      font-size: 12px;
+      color: #9a9a9a;
+      white-space: nowrap;
+    }
+    .footer-credit a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .footer-credit a:hover {
+      color: var(--primary-color, #f97316);
+    }
+    @media (max-width: 1360px) {
+      .footer-bottom > .footer-credit {
+        margin-right: 72px;
+      }
+    }
+    @media (max-width: 900px) {
+      .footer-bottom {
+        grid-template-columns: 1fr;
+      }
+      .footer-bottom > p,
+      .footer-bottom > .footer-credit {
+        grid-column: 1;
+      }
+      .footer-bottom > .footer-credit {
+        margin-right: 0;
+        padding-bottom: 64px;
+      }
     }
     .whatsapp-float {
       position: fixed;
