@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -29,9 +28,6 @@ import { ToastService } from '../../../core/services/toast.service';
             </button>
             <a routerLink="/compte/inscription">Créer un compte</a>
             <a routerLink="/compte/mot-de-passe-oublie">Mot de passe oublié ?</a>
-            <button type="button" class="link-dev-reset" (click)="devResetPassword()">
-              Débloquer la connexion (réinitialiser le mot de passe pour cet email)
-            </button>
           </form>
         </div>
       </div>
@@ -73,20 +69,6 @@ import { ToastService } from '../../../core/services/toast.service';
       color: var(--primary-color);
       margin-top: 8px;
     }
-    .link-dev-reset {
-      display: block;
-      width: 100%;
-      margin-top: 16px;
-      padding: 8px;
-      background: none;
-      border: none;
-      font-size: 12px;
-      color: var(--text-light);
-      cursor: pointer;
-      text-align: center;
-      text-decoration: underline;
-    }
-    .link-dev-reset:hover { color: var(--primary-color); }
     @media (max-width: 480px) {
       .login {
         padding: 32px 0;
@@ -107,7 +89,6 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private api: ApiService,
     private router: Router,
     private route: ActivatedRoute,
     private toast: ToastService
@@ -139,27 +120,6 @@ export class LoginComponent {
         }
         this.loading = false;
       }
-    });
-  }
-
-  /** En dev : réinitialise le mot de passe pour l’email saisi (mot de passe fixe). */
-  devResetPassword() {
-    const email = this.email.trim();
-    if (!email) {
-      this.toast.error('Indiquez l’email du compte à débloquer');
-      return;
-    }
-    const newPassword = 'Password123!';
-    this.api.post<{ ok: boolean; message: string }>('/auth/dev-reset-password', { email, newPassword }).subscribe({
-      next: (res) => {
-        if (res.ok) {
-          this.password = newPassword;
-          this.toast.success(res.message + ' Mot de passe : ' + newPassword);
-        } else {
-          this.toast.error(res.message);
-        }
-      },
-      error: (err) => this.toast.error(err?.message || 'Erreur lors de la réinitialisation')
     });
   }
 }

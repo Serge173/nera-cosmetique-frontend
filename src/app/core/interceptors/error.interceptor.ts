@@ -6,7 +6,7 @@ import { AuthService } from '../services/auth.service';
 import { StorageService } from '../services/storage.service';
 import { ToastService } from '../services/toast.service';
 
-const NO_REFRESH = /\/auth\/(login|register|refresh|forgot-password|reset-password|dev-reset-password)$/;
+const NO_REFRESH = /\/auth\/(login|register|refresh|forgot-password|reset-password)$/;
 const PROTECTED_PAGE = /^\/(admin|commander)(\/|\?|#|$)|^\/compte(?!\/(connexion|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe)(\/|\?|#|$))(\/|\?|#|$)/;
 
 let refresh$: Observable<string> | null = null;
