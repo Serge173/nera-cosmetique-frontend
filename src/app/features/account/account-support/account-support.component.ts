@@ -172,7 +172,7 @@ export class AccountSupportComponent implements OnInit, AfterViewInit {
       },
       {
         q: 'Comment fonctionnent les points fidélité ?',
-        a: '10 points vous sont offerts à la création de votre compte, puis vous gagnez 1 point pour chaque tranche de 1 000 F CFA d’articles livrés. Chaque point vaut 50 F CFA : générez quand vous voulez un code promo du montant de vos points (10 points = 500 F CFA), valable 90 jours.',
+        a: '10 points vous sont offerts à la création de votre compte, puis vous gagnez 1 point pour chaque tranche de 1 000 F CFA d’articles livrés. La valeur d’un point est indiquée dans « Mes points fidélité » : générez quand vous voulez un code promo du montant de vos points, valable 90 jours.',
         link: { label: 'Découvrir le programme', path: '/compte/fidelite' },
       },
       {

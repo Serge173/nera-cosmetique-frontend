@@ -20,6 +20,14 @@ interface Coupon {
   createdAt: string;
 }
 
+interface LoyaltySettings {
+  pointValue: number;
+  redeemEnabled: boolean;
+  welcomeBonus: number;
+  amountPerPoint: number;
+  stats: { generated: number; used: number; outstanding: number };
+}
+
 type CouponState = 'active' | 'inactive' | 'expired' | 'scheduled' | 'exhausted';
 
 const STATE_INFO: Record<CouponState, { label: string; tone: string }> = {
@@ -78,6 +86,60 @@ const emptyForm = (): CouponForm => ({
         <div><div class="adm-stat-label">Expirés / épuisés</div><div class="adm-stat-value">{{ stats().ended }}</div></div>
       </div>
     </div>
+
+    <section class="adm-card loyalty" aria-labelledby="loyalty-title">
+      <div class="adm-card-head">
+        <div>
+          <h2 id="loyalty-title"><i class="fa-solid fa-gift"></i> Programme fidélité — valeur du point</h2>
+          <div class="adm-sub">Les clients transforment leurs points en codes promo personnels depuis leur espace « Mes points fidélité ».</div>
+        </div>
+        @if (loyalty(); as l) {
+          <span class="adm-badge dot {{ l.redeemEnabled ? 'green' : 'red' }}">{{ l.redeemEnabled ? 'Conversion active' : 'Conversion bloquée' }}</span>
+        }
+      </div>
+      <div class="adm-card-body loyalty-body">
+        @if (loyalty(); as l) {
+          <form class="loyalty-form" (ngSubmit)="saveLoyalty()">
+            <label class="adm-field">
+              <span>Valeur d'un point (F CFA)</span>
+              <input class="adm-input" type="number" name="pointValue" [(ngModel)]="pointValue" required min="1" max="100000" step="1" />
+              <small>{{ l.welcomeBonus }} points offerts à l'inscription = {{ formatPrice(l.welcomeBonus * (pointValue || 0)) }}.</small>
+            </label>
+            <div class="adm-field">
+              <span>Conversion des points en codes promo</span>
+              <label class="adm-switch">
+                <input type="checkbox" name="redeemEnabled" [(ngModel)]="redeemEnabled" />
+                <span class="track"></span>
+                {{ redeemEnabled ? 'Débloquée : les clients peuvent générer des codes' : 'Bloquée : les clients ne peuvent plus générer de codes' }}
+              </label>
+              <small>Les points restent acquis, et les codes déjà générés restent utilisables.</small>
+            </div>
+            <div class="loyalty-actions">
+              <button type="submit" class="adm-btn" [disabled]="savingLoyalty() || !loyaltyDirty()">
+                <i class="fa-solid" [class.fa-check]="!savingLoyalty()" [class.fa-spinner]="savingLoyalty()" [class.fa-spin]="savingLoyalty()"></i>
+                Enregistrer
+              </button>
+            </div>
+          </form>
+          <ul class="loyalty-stats">
+            <li><strong>{{ l.stats.generated }}</strong><span>codes fidélité générés</span></li>
+            <li><strong>{{ l.stats.used }}</strong><span>codes utilisés</span></li>
+            <li><strong>{{ formatPrice(l.stats.outstanding) }}</strong><span>de codes en attente d'utilisation</span></li>
+          </ul>
+          <p class="loyalty-note">
+            <i class="fa-solid fa-circle-info"></i>
+            Un client gagne 1 point par tranche de {{ formatPrice(l.amountPerPoint) }} d'articles livrés. Une nouvelle valeur s'applique aux prochains codes générés ; les codes existants gardent leur montant.
+          </p>
+        } @else if (loyaltyError()) {
+          <div class="adm-empty compact">
+            <p>Impossible de charger les réglages fidélité.</p>
+            <button type="button" class="adm-btn adm-btn-sm" (click)="loadLoyalty()">Réessayer</button>
+          </div>
+        } @else {
+          <div class="adm-skel" style="height: 120px"></div>
+        }
+      </div>
+    </section>
 
     <section class="adm-card">
       <div class="adm-card-head">
@@ -258,6 +320,31 @@ const emptyForm = (): CouponForm => ({
     .tip div { flex: 1; }
     .tip strong { color: var(--adm-ink); font-size: .9rem; }
     .tip p { margin: 2px 0 0; font-size: .82rem; color: var(--adm-muted); }
+    .loyalty { margin-bottom: 20px; }
+    .loyalty h2 i { color: var(--adm-orange); margin-right: 6px; }
+    .loyalty-body { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px 28px; align-items: start; }
+    .loyalty-form { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto; gap: 16px 20px; align-items: start; }
+    .loyalty-form .adm-switch { margin-top: 6px; }
+    .loyalty-form small { color: var(--adm-muted); font-size: .76rem; }
+    .loyalty-actions { padding-top: 22px; }
+    .loyalty-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .loyalty-stats li { padding: 12px; border-radius: 12px; background: var(--adm-orange-50); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .loyalty-stats strong { color: var(--adm-orange-dark); font-size: 1rem; overflow-wrap: anywhere; }
+    .loyalty-stats span { color: var(--adm-muted); font-size: .74rem; line-height: 1.3; }
+    .loyalty-note { grid-column: 1 / -1; margin: 0; font-size: .8rem; color: var(--adm-muted); display: flex; gap: 8px; align-items: baseline; }
+    .loyalty-note i { color: var(--adm-orange); }
+    .compact { padding: 20px 12px; }
+    @media (max-width: 1280px) {
+      .loyalty-body { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .loyalty-form { grid-template-columns: minmax(0, 1fr); }
+      .loyalty-actions { padding-top: 0; }
+      .loyalty-actions .adm-btn { width: 100%; }
+    }
+    @media (max-width: 460px) {
+      .loyalty-stats { grid-template-columns: minmax(0, 1fr); }
+    }
     .drawer-form { display: flex; flex-direction: column; height: 100%; }
     .code-row { display: flex; gap: 8px; }
     .mono { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
@@ -289,6 +376,12 @@ export class AdminPromotionsComponent implements OnInit {
   readonly saving = signal(false);
   form: CouponForm = emptyForm();
 
+  readonly loyalty = signal<LoyaltySettings | null>(null);
+  readonly loyaltyError = signal(false);
+  readonly savingLoyalty = signal(false);
+  pointValue: number | null = null;
+  redeemEnabled = true;
+
   readonly stats = computed(() => {
     const list = this.coupons();
     const states = list.map((c) => this.stateOf(c));
@@ -304,6 +397,7 @@ export class AdminPromotionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadLoyalty();
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((p) => {
       if (p.get('nouveau')) this.openForm();
     });
@@ -320,6 +414,45 @@ export class AdminPromotionsComponent implements OnInit {
         this.toast.error('Impossible de charger les codes promo.');
       },
     });
+  }
+
+  loadLoyalty(): void {
+    this.loyaltyError.set(false);
+    this.api.get<LoyaltySettings>('/admin/loyalty-settings').subscribe({
+      next: (l) => this.applyLoyalty(l),
+      error: () => this.loyaltyError.set(true),
+    });
+  }
+
+  loyaltyDirty(): boolean {
+    const l = this.loyalty();
+    return !!l && (Number(this.pointValue) !== l.pointValue || this.redeemEnabled !== l.redeemEnabled);
+  }
+
+  saveLoyalty(): void {
+    const value = Number(this.pointValue);
+    if (!Number.isInteger(value) || value < 1 || value > 100000) {
+      this.toast.error("La valeur d'un point doit être un nombre entier entre 1 et 100 000 F CFA.");
+      return;
+    }
+    this.savingLoyalty.set(true);
+    this.api.patch<LoyaltySettings>('/admin/loyalty-settings', { pointValue: value, redeemEnabled: this.redeemEnabled }).subscribe({
+      next: (l) => {
+        this.savingLoyalty.set(false);
+        this.applyLoyalty(l);
+        this.toast.success(`Réglages fidélité enregistrés : 1 point = ${formatPrice(l.pointValue)}, conversion ${l.redeemEnabled ? 'débloquée' : 'bloquée'}.`);
+      },
+      error: (err) => {
+        this.savingLoyalty.set(false);
+        this.toast.error(err?.error?.message || 'Enregistrement impossible.');
+      },
+    });
+  }
+
+  private applyLoyalty(l: LoyaltySettings): void {
+    this.loyalty.set(l);
+    this.pointValue = l.pointValue;
+    this.redeemEnabled = l.redeemEnabled;
   }
 
   stateOf(c: Coupon): CouponState {

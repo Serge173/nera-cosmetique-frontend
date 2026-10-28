@@ -64,7 +64,13 @@ const VOUCHER_STATE: Record<LoyaltyVoucher['state'], { label: string; tone: stri
 
         <section class="adm-card redeem" aria-labelledby="redeem-title">
           <h2 id="redeem-title" class="title"><i class="fa-solid fa-gift"></i> Convertir mes points</h2>
-          @if (d.points >= d.rules.minRedeem) {
+          @if (!d.rules.redeemEnabled) {
+            <div class="locked">
+              <span class="lock-icon"><i class="fa-solid fa-pause"></i></span>
+              <p>La conversion des points en codes promo est <strong>momentanément suspendue</strong>.</p>
+              <small>Vos points restent acquis et vos codes déjà obtenus restent valables.</small>
+            </div>
+          } @else if (d.points >= d.rules.minRedeem) {
             <p class="muted">
               Choisissez le nombre de points à transformer en code promo : chaque point vaut {{ formatPrice(d.rules.pointValue) }}@if (d.rules.redeemStep > 1) { (par tranche de {{ d.rules.redeemStep }})}.
             </p>
