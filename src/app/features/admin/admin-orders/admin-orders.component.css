@@ -2,8 +2,6 @@
 
 .period-select { width: 190px; flex-shrink: 0; }
 .chips-bar { padding-top: 12px; padding-bottom: 12px; }
-.adm-chips { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; padding-bottom: 2px; }
-.adm-chips::-webkit-scrollbar { display: none; }
 .adm-chip { flex-shrink: 0; }
 .adm-chip i { font-size: .72rem; opacity: .75; }
 

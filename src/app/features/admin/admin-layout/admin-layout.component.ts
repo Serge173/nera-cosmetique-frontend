@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, NgZone, OnDestroy, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -26,6 +26,22 @@ interface SearchResults {
 
 const EMPTY_RESULTS: SearchResults = { products: [], orders: [], customers: [] };
 
+/** Recopie l'intitulé de colonne dans data-label : sur mobile, les lignes deviennent des cartes étiquetées. */
+function labelTableCells(root: HTMLElement): void {
+  root.querySelectorAll('table').forEach((table) => {
+    const heads = Array.from(table.querySelectorAll('thead th'), (th) => th.textContent?.trim() ?? '');
+    if (!heads.length) return;
+    table.querySelectorAll('tbody tr').forEach((tr) => {
+      let col = 0;
+      for (const cell of Array.from(tr.children) as HTMLTableCellElement[]) {
+        const label = heads[col] ?? '';
+        if (cell.getAttribute('data-label') !== label) cell.setAttribute('data-label', label);
+        col += cell.colSpan || 1;
+      }
+    });
+  });
+}
+
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -38,7 +54,24 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
+  private zone = inject(NgZone);
+  private host: ElementRef<HTMLElement> = inject(ElementRef);
+  private tableObserver?: MutationObserver;
   readonly summaryService = inject(AdminSummaryService);
+
+  readonly searchPlaceholder = signal('Rechercher un produit, une commande, un client...');
+
+  constructor() {
+    afterNextRender(() => {
+      this.watchTables();
+      const narrow = window.matchMedia('(max-width: 720px)');
+      const apply = () =>
+        this.searchPlaceholder.set(narrow.matches ? 'Rechercher…' : 'Rechercher un produit, une commande, un client...');
+      apply();
+      narrow.addEventListener('change', apply);
+      this.destroyRef.onDestroy(() => narrow.removeEventListener('change', apply));
+    });
+  }
 
   readonly mainNav: NavItem[] = [
     { label: 'Tableau de bord', icon: 'fa-house', path: '/admin', exact: true },
@@ -132,7 +165,27 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.summaryService.stop();
+    this.tableObserver?.disconnect();
     document.body.style.overflow = '';
+  }
+
+  private watchTables(): void {
+    const root = this.host.nativeElement.querySelector<HTMLElement>('.adm-content');
+    if (!root) return;
+    let queued = false;
+    const run = () => {
+      queued = false;
+      labelTableCells(root);
+    };
+    this.zone.runOutsideAngular(() => {
+      this.tableObserver = new MutationObserver(() => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(run);
+      });
+      this.tableObserver.observe(root, { childList: true, subtree: true });
+    });
+    run();
   }
 
   isActive(item: NavItem): boolean {

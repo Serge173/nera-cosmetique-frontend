@@ -104,7 +104,7 @@ interface AdminSlide {
                 <tbody>
                   @for (s of slides; track s.id) {
                     <tr [class.inactive]="!s.isActive">
-                      <td>
+                      <td class="cell-media">
                         @if (s.imageUrl) {
                           <img [src]="s.imageUrl" alt="" class="slide-thumb" />
                         } @else {

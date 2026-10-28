@@ -73,7 +73,7 @@
             [ngModel]="searchTerm"
             (ngModelChange)="onSearchInput($event)"
             (focus)="onSearchFocus()"
-            placeholder="Rechercher un produit, une commande, un client..."
+            [placeholder]="searchPlaceholder()"
             autocomplete="off"
             aria-label="Recherche globale"
             maxlength="80"

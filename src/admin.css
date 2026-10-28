@@ -546,8 +546,162 @@
   .adm-shell .adm-content .legacy-page .stock-section { padding: 16px; }
   .adm-shell .adm-content .legacy-page > h1,
   .adm-shell .adm-content .legacy-page .admin-header h1 { font-size: 1.35rem; }
-  .adm-shell .adm-content .legacy-page table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .adm-shell .adm-content .legacy-page table th,
-  .adm-shell .adm-content .legacy-page table td { white-space: nowrap; }
   .adm-shell .adm-content .legacy-page .form-row { grid-template-columns: 1fr; }
+  .adm-shell .adm-content .legacy-page .filters label { flex: 1 1 100%; flex-wrap: wrap; }
+  .adm-shell .adm-content .legacy-page .filters input { flex: 1 1 160px; min-width: 0 !important; width: 100%; }
+}
+
+/* ==========================================================================
+   Tableaux responsives
+   - 901 → 1280 px : tableaux resserrés, colonnes secondaires (.hide-lg) masquées
+   - ≤ 900 px      : chaque ligne devient une carte étiquetée (data-label posé
+                     par le layout), 2 cartes par ligne sur tablette, 1 sur mobile
+   Ajouter .no-stack sur un tableau pour conserver l'affichage classique.
+   ========================================================================== */
+@media (min-width: 901px) and (max-width: 1280px) {
+  .adm-shell .adm-content table th,
+  .adm-shell .adm-content table td { padding-left: 10px; padding-right: 10px; }
+  .adm-shell .adm-content table td { overflow-wrap: anywhere; }
+  .adm-shell .adm-content .hide-lg { display: none; }
+}
+
+@media (max-width: 900px) {
+  .adm-shell .adm-content table:not(.no-stack) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+  .adm-shell .adm-content table:not(.no-stack) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .adm-shell .adm-content table:not(.no-stack) tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+  .adm-shell .adm-content .adm-card-body table:not(.no-stack) tbody,
+  .adm-shell .adm-content .legacy-page [class$="-panel"] table:not(.no-stack) tbody,
+  .adm-shell .adm-content .legacy-page .stock-section table:not(.no-stack) tbody { padding: 0; }
+  .adm-shell .adm-content .legacy-page .table-wrap,
+  .adm-shell .adm-content .legacy-page .products-table,
+  .adm-shell .adm-content .legacy-page .users-table { overflow: visible; }
+  .adm-shell .adm-content .legacy-page .stock-section .table-wrap { background: transparent; box-shadow: none; }
+
+  .adm-shell .adm-content table:not(.no-stack) tr {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 2px 14px;
+    background: #fff;
+    border: 1px solid var(--adm-line-strong);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(42, 37, 33, .04);
+  }
+  .adm-shell .adm-content table:not(.no-stack) tbody tr:hover { background: #fff; border-color: #f6d8c4; }
+
+  .adm-shell .adm-content table:not(.no-stack) td {
+    display: flow-root;
+    min-width: 0;
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px dashed var(--adm-line);
+    text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: .84rem;
+  }
+  .adm-shell .adm-content table:not(.no-stack) td::before {
+    content: attr(data-label);
+    float: left;
+    max-width: 48%;
+    margin-right: 12px;
+    text-align: left;
+    color: var(--adm-muted);
+    font-size: .74rem;
+    font-weight: 600;
+    line-height: 1.7;
+  }
+  .adm-shell .adm-content table:not(.no-stack) td:last-child { border-bottom: 0; }
+
+  /* En-tête de carte : première colonne (ou celle qui suit la vignette) */
+  .adm-shell .adm-content table:not(.no-stack) td:first-child:not(.cell-media),
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media + td {
+    padding: 12px 0 10px;
+    border-bottom: 1px solid var(--adm-line);
+    text-align: left;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--adm-ink);
+  }
+  .adm-shell .adm-content table:not(.no-stack) td:first-child:not(.cell-media)::before,
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media + td::before,
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media::before,
+  .adm-shell .adm-content table:not(.no-stack) td.actions::before,
+  .adm-shell .adm-content table:not(.no-stack) td[colspan]::before,
+  .adm-shell .adm-content table:not(.no-stack) td[data-label=""]::before { content: none; }
+
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    padding: 0;
+    border: 0;
+  }
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media img {
+    display: block;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+  .adm-shell .adm-content table:not(.no-stack) td.cell-media + td {
+    min-height: 80px;
+    padding-left: 70px;
+    padding-top: 14px;
+  }
+
+  .adm-shell .adm-content table:not(.no-stack) td.actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin-top: auto;
+    padding: 12px 0;
+    border-bottom: 0;
+  }
+  .adm-shell .adm-content table:not(.no-stack) td.actions > * + * { margin-left: 0; }
+
+  /* Lignes d'état (chargement, liste vide) : pleine largeur, sans carte */
+  .adm-shell .adm-content table:not(.no-stack) tr:has(> td[colspan]) {
+    grid-column: 1 / -1;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .adm-shell .adm-content table:not(.no-stack) tr:has(> td[colspan]) > td {
+    padding: 8px 0;
+    border: 0;
+    text-align: center;
+    font-size: .85rem;
+    font-weight: 400;
+    color: var(--adm-muted);
+  }
+}
+
+@media (max-width: 600px) {
+  .adm-shell .adm-content table:not(.no-stack) tbody { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px; }
 }

@@ -156,7 +156,7 @@ import { safeThumbImageUrl } from '../../../shared/utils/placeholder-image';
               } @else {
                 @for (p of filteredProducts; track p.id) {
                   <tr>
-                    <td>
+                    <td class="cell-media">
                       <img [src]="getProductImage(p)" [alt]="p.name" class="thumb" />
                     </td>
                     <td>{{ p.name }}</td>

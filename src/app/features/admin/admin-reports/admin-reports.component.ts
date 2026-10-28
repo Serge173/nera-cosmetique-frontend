@@ -184,7 +184,7 @@ import { DashboardData, PERIODS, toDonut } from '../admin-dashboard/admin-dashbo
     .pay small { font-size: .75rem; color: var(--adm-muted); }
     .pay b { font-size: .85rem; color: var(--adm-ink); white-space: nowrap; }
     @media (max-width: 1100px) { .grid-2, .grid-2.wide-left { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .adm-page-actions { width: 100%; } .adm-chips { overflow-x: auto; flex-wrap: nowrap; } .adm-chip { flex-shrink: 0; } }
+    @media (max-width: 640px) { .adm-page-actions { width: 100%; } .adm-chips { width: 100%; } .adm-chip { flex: 1 1 auto; justify-content: center; } }
   `],
 })
 export class AdminReportsComponent implements OnInit {

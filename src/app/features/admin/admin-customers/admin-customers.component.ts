@@ -91,7 +91,7 @@ const PAGE_SIZE = 15;
             <tr>
               <th>Client</th>
               <th>Téléphone</th>
-              <th>Inscrit le</th>
+              <th class="hide-lg">Inscrit le</th>
               <th>Commandes</th>
               <th>Total dépensé</th>
               <th>Dernière commande</th>
@@ -117,7 +117,7 @@ const PAGE_SIZE = 15;
                     </div>
                   </td>
                   <td class="muted">{{ c.phone || '—' }}</td>
-                  <td class="muted nowrap">{{ formatDate(c.createdAt) }}</td>
+                  <td class="muted nowrap hide-lg">{{ formatDate(c.createdAt) }}</td>
                   <td>{{ c.ordersCount }}</td>
                   <td class="strong nowrap">{{ formatPrice(c.totalSpent) }}</td>
                   <td class="muted nowrap">{{ c.lastOrderAt ? formatDate(c.lastOrderAt) : '—' }}</td>
